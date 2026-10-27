@@ -12,8 +12,8 @@ android {
         applicationId = "com.flashcut.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 16
-        versionName = "0.16.0"
+        versionCode = 22
+        versionName = "0.22.0"
 
         // WorkBuddy 本机服务地址：可通过 gradle 属性覆盖
         //   ./gradlew assembleDebug -PworkbuddyBaseUrl=http://10.66.11.69:8791/v1

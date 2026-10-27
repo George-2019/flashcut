@@ -46,11 +46,87 @@ class ExportActivity : AppCompatActivity() {
             }
         }
         // 三个可选项：点一下切换勾选
-        listOf(binding.rowVideo, binding.rowProject, binding.rowSrt).forEach { row ->
+        listOf(binding.rowVideo, binding.rowProject, binding.rowSrt, binding.rowSubBurn).forEach { row ->
             row.setOnClickListener { toggleRow(row) }
         }
+        binding.rowEffect.setOnClickListener { showEffectPicker() }
+        binding.rowTransition.setOnClickListener { showTransitionPicker() }
+        binding.rowMusic.setOnClickListener { showMusicPicker() }
+        binding.rowNarration.setOnClickListener { showNarrationInfo() }
+        refreshOptionLabels()
         binding.btnShare.setOnClickListener { outputPath?.let { share(it) } }
         binding.btnPlay.setOnClickListener { outputPath?.let { play(it) } }
+    }
+
+    private fun refreshOptionLabels() {
+        binding.rowEffect.text =
+            "成片风格：${com.flashcut.app.media.EffectPreset.of(AnalysisCache.effectPreset).label}"
+        binding.rowTransition.text =
+            "转场：${com.flashcut.app.media.TransitionFactory.Type.of(AnalysisCache.transition).label}"
+        binding.rowMusic.text = "配乐：" + (
+            AnalysisCache.musicStyle?.let { com.flashcut.app.media.MusicSynth.Style.of(it).label }
+                ?: "不加配乐"
+            )
+        val n = AnalysisCache.narration.ifBlank { AnalysisCache.script?.narration.orEmpty() }
+        binding.rowNarration.text = if (n.isBlank()) "配音：未生成" else "配音：${n.take(14)}…"
+    }
+
+    private fun showEffectPicker() {
+        val items = com.flashcut.app.media.EffectPreset.entries
+        val names = items.map { "${it.label}　${it.desc}" }.toTypedArray()
+        val cur = items.indexOfFirst { it.id == AnalysisCache.effectPreset }.coerceAtLeast(0)
+        android.app.AlertDialog.Builder(this)
+            .setTitle("成片风格")
+            .setSingleChoiceItems(names, cur) { d, w ->
+                AnalysisCache.effectPreset = items[w].id
+                refreshOptionLabels()
+                d.dismiss()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun showTransitionPicker() {
+        val items = com.flashcut.app.media.TransitionFactory.Type.entries
+        val names = items.map { "${it.label}　${it.desc}" }.toTypedArray()
+        val cur = items.indexOfFirst { it.id == AnalysisCache.transition }.coerceAtLeast(0)
+        android.app.AlertDialog.Builder(this)
+            .setTitle("转场")
+            .setSingleChoiceItems(names, cur) { d, w ->
+                AnalysisCache.transition = items[w].id
+                refreshOptionLabels()
+                d.dismiss()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun showMusicPicker() {
+        val items = com.flashcut.app.media.MusicSynth.Style.entries
+        val names = (items.map { "${it.label}　${it.bpm} BPM" } + "不加配乐").toTypedArray()
+        val cur = items.indexOfFirst { it.id == AnalysisCache.musicStyle }.let { if (it < 0) items.size else it }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("背景音乐")
+            .setSingleChoiceItems(names, cur) { d, w ->
+                AnalysisCache.musicStyle = if (w < items.size) items[w].id else null
+                refreshOptionLabels()
+                d.dismiss()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun showNarrationInfo() {
+        val n = AnalysisCache.narration.ifBlank { AnalysisCache.script?.narration.orEmpty() }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("配音")
+            .setMessage(
+                if (n.isBlank()) "还没有配音文案。\n\n在成片页点「配音」可以先写一段解说词，" +
+                    "导出时会用系统 TTS 合成并混入成片。"
+                else "将要合成：\n\n$n\n\n导出时用系统 TTS 转成语音，作为独立音轨混入。"
+            )
+            .setPositiveButton("知道了", null)
+            .show()
     }
 
     private fun runExport(project: com.flashcut.app.data.Project) {
@@ -59,7 +135,29 @@ class ExportActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
 
         lifecycleScope.launch {
-            val result = VideoExporter().export(this@ExportActivity, project) { p ->
+            // 从界面上当前选中的项拼出导出配置
+            val opts = com.flashcut.app.media.ExportOptions(
+                effectPreset = com.flashcut.app.media.EffectPreset.of(AnalysisCache.effectPreset),
+                transition = com.flashcut.app.media.TransitionFactory.Type.of(AnalysisCache.transition),
+                burnSubtitles = binding.rowSubBurn.text.startsWith("✓"),
+                narrationText = AnalysisCache.narration.ifBlank {
+                    AnalysisCache.script?.narration.orEmpty()
+                },
+                musicStyle = AnalysisCache.musicStyle?.let {
+                    com.flashcut.app.media.MusicSynth.Style.of(it)
+                },
+            )
+            com.flashcut.app.DebugLog.i(
+                this@ExportActivity, "Export",
+                "配置 风格=${opts.effectPreset.label} 转场=${opts.transition.label} " +
+                    "字幕烧录=${opts.burnSubtitles} 配乐=${opts.musicStyle?.label ?: "无"}"
+            )
+            val result = VideoExporter().export(
+                this@ExportActivity, project, opts,
+                onPrepare = { msg ->
+                    binding.tvPercent.text = msg
+                },
+            ) { p ->
                 binding.progressBar.progress = p.percent
                 binding.tvPercent.text = "${p.percent}%　${p.message}"
             }

@@ -101,6 +101,56 @@
                 android:text="○ 字幕文件（SRT）" />
 
             <TextView
+                android:id="@+id/rowSubBurn"
+                style="@style/Text.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:padding="14dp"
+                android:text="✓ 字幕烧录进画面" />
+
+            <TextView
+                android:id="@+id/rowEffect"
+                style="@style/Text.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:padding="14dp"
+                android:text="成片风格：原片" />
+
+            <TextView
+                android:id="@+id/rowTransition"
+                style="@style/Text.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:padding="14dp"
+                android:text="转场：硬切" />
+
+            <TextView
+                android:id="@+id/rowMusic"
+                style="@style/Text.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:padding="14dp"
+                android:text="配乐：轻快电子" />
+
+            <TextView
+                android:id="@+id/rowNarration"
+                style="@style/Text.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:padding="14dp"
+                android:text="配音：未生成" />
+
+            <TextView
                 android:id="@+id/tvTip"
                 style="@style/Text.Tiny"
                 android:layout_width="match_parent"

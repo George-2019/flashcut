@@ -38,7 +38,7 @@ class LlmClient {
                 user = "只回复 JSON：{\"ok\":true}",
                 jsonMode = profile.supportsJsonMode,
             )
-            when (val r = post(profile.chatUrl(), apiKey, body, profile.timeoutSec)) {
+            when (val r = post(profile.chatUrl(), apiKey, body, ReasoningModel.timeoutSec(profile.model, profile.timeoutSec))) {
                 is LlmResult.Err -> r
                 is LlmResult.Ok -> {
                     val text = extractContent(r.value)
@@ -145,7 +145,7 @@ class LlmClient {
         """.trimIndent()
         val user = "剪辑意图：$intent\n素材摘要：$clipsJson"
         val body = buildChatBody(profile, system, user, profile.supportsJsonMode)
-        when (val r = post(profile.chatUrl(), apiKey, body, profile.timeoutSec)) {
+        when (val r = post(profile.chatUrl(), apiKey, body, ReasoningModel.timeoutSec(profile.model, profile.timeoutSec))) {
             is LlmResult.Err -> r
             is LlmResult.Ok -> {
                 val content = stripFence(extractContent(r.value))
@@ -180,7 +180,7 @@ class LlmClient {
         user: String,
     ): LlmResult<String> = withContext(Dispatchers.IO) {
         val body = buildChatBody(profile, system, user, profile.supportsJsonMode)
-        when (val r = post(profile.chatUrl(), apiKey, body, profile.timeoutSec)) {
+        when (val r = post(profile.chatUrl(), apiKey, body, ReasoningModel.timeoutSec(profile.model, profile.timeoutSec))) {
             is LlmResult.Err -> r
             is LlmResult.Ok -> {
                 val content = stripFence(extractContent(r.value))

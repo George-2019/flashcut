@@ -3,6 +3,8 @@ package com.flashcut.app.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
@@ -17,10 +19,20 @@ class VoiceActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityVoiceBinding
     private var selectedMusic = ""
+    // 配乐直接对应可合成的真实风格
     private val musics = listOf(
-        Template("♫", "Sunny Days", "轻快 · 110 BPM · 适合旅行", "sunny"),
-        Template("♫", "Golden Hour", "温暖 · 96 BPM · 适合落日", "golden"),
-        Template("♫", "City Run", "动感 · 128 BPM · 适合卡点", "city"),
+        Template("♫", "轻快电子", "110 BPM · 适合旅行/日常",
+            "light", com.flashcut.app.media.EffectPreset.ORIGINAL,
+            com.flashcut.app.media.MusicSynth.Style.LIGHT),
+        Template("♫", "温暖钢琴", "82 BPM · 适合萌娃/回忆",
+            "warm", com.flashcut.app.media.EffectPreset.ORIGINAL,
+            com.flashcut.app.media.MusicSynth.Style.WARM),
+        Template("♫", "燃向鼓点", "128 BPM · 适合卡点混剪",
+            "energy", com.flashcut.app.media.EffectPreset.ORIGINAL,
+            com.flashcut.app.media.MusicSynth.Style.ENERGY),
+        Template("♫", "舒缓氛围", "70 BPM · 适合情绪片",
+            "calm", com.flashcut.app.media.EffectPreset.ORIGINAL,
+            com.flashcut.app.media.MusicSynth.Style.CALM),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +43,7 @@ class VoiceActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { finish() }
         binding.btnNext.setOnClickListener {
             AnalysisCache.narration = binding.etNarration.text?.toString().orEmpty()
+            AnalysisCache.musicStyle = selectedMusicStyleId()
             startActivity(SubtitlesActivity.intent(this))
             finish()
         }
@@ -43,8 +56,23 @@ class VoiceActivity : AppCompatActivity() {
             appendLine("🎙 温柔女声 · 中文 · 语速 0.95× · 情绪舒缓")
             append("试听 00:08　▶ 点击试听")
         }
+        // 试听走真实 TTS，合成成功就直接播
         binding.tvVoiceInfo.setOnClickListener {
-            shown("试听功能需要 TTS 引擎，当前版本暂未接入；导出的成片不含配音。")
+            val text = binding.etNarration.text?.toString().orEmpty()
+            if (text.isBlank()) { shown("请先输入配音文案"); return@setOnClickListener }
+            shown("正在合成试听…")
+            lifecycleScope.launch {
+                val r = com.flashcut.app.media.TtsEngine().synthesize(this@VoiceActivity, text)
+                val ok = r.getOrNull()
+                if (ok != null) {
+                    playAudio(ok.file)
+                } else {
+                    shown(
+                        "配音不可用：" + (r.exceptionOrNull()?.message ?: "未知原因") +
+                            "\n导出的成片会自动跳过配音，其余效果正常。"
+                    )
+                }
+            }
         }
         binding.tvMusicRules.text = buildString {
             appendLine("✓ 自动卡点对齐")
@@ -57,7 +85,8 @@ class VoiceActivity : AppCompatActivity() {
         binding.rvMusic.layoutManager = LinearLayoutManager(this)
         var musicAdapter: MusicAdapter? = null
         musicAdapter = MusicAdapter(musics) { picked ->
-            selectedMusic = picked.name
+            selectedMusic = picked.style          // 存 id，不是显示名
+            AnalysisCache.musicStyle = picked.music.id   // 立刻生效
             musicAdapter?.select(picked.name)
             shown("配乐已选：${picked.name}（${picked.desc}）")
         }
@@ -77,6 +106,24 @@ class VoiceActivity : AppCompatActivity() {
         }
         binding.etNarration.isEnabled = picked === binding.tabAi
     }
+
+    /** 播放合成出来的音频 */
+    private fun playAudio(file: java.io.File) {
+        runCatching {
+            val mp = android.media.MediaPlayer().apply {
+                setDataSource(file.absolutePath)
+                prepare()
+                start()
+                setOnCompletionListener { it.release() }
+            }
+            shown("试听中…（${file.length() / 1024}KB）")
+        }.onFailure { shown("播放失败：${it.message}") }
+    }
+
+    /** 当前选中的配乐风格 id，未选则用默认 */
+    private fun selectedMusicStyleId(): String =
+        musics.firstOrNull { it.style == selectedMusic }?.music?.id
+            ?: com.flashcut.app.media.MusicSynth.Style.LIGHT.id
 
     private fun defaultNarration() =
         "那天傍晚，风从海面吹过来。我们沿着环海路一直往前开，直到太阳把整片洱海染成金色。有些瞬间，值得慢一点记住。"

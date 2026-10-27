@@ -41,6 +41,15 @@ object ReasoningModel {
         return maxOf(base, 4096) + 4096
     }
 
+    /**
+     * 推理模型的超时预算。
+     * 实测 hy4-preview 单次请求 86 秒（思考 3772 token），60 秒必然超时。
+     */
+    fun timeoutSec(model: String, base: Int): Int {
+        if (!isReasoning(model)) return base
+        return maxOf(base, 180)
+    }
+
     /** 截断时的可读提示 */
     fun truncatedHint(model: String, reasoningTokens: Int): String = buildString {
         append("模型「$model」输出被截断")

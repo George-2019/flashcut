@@ -20,10 +20,14 @@ class OnscreenActivity : AppCompatActivity() {
     private lateinit var binding: ActivityOnscreenBinding
     private var selectedStyle = "cinema"
     private val styles = listOf(
-        Template("🎬", "电影叙事", "冷调黑边 · 宽银幕 · 变速转场 · 低饱和字幕 · 节奏慢", "cinema"),
-        Template("🌿", "清新日常", "日系明亮 · 高频剪辑 · 手写体字幕 · 节奏快", "fresh"),
-        Template("⚡", "燃向卡点", "强对比 · 快速切换 · 重特效 · 节奏极快", "beat"),
-        Template("📼", "复古胶片", "颗粒感 · 暖色调 · 慢推镜头 · 节奏中", "retro"),
+        Template("🎬", "电影叙事", "冷调 · 低饱和 · 慢节奏",
+            "cinema", com.flashcut.app.media.EffectPreset.COOL, com.flashcut.app.media.MusicSynth.Style.CALM),
+        Template("🌿", "清新日常", "明亮 · 高饱和 · 轻快",
+            "fresh", com.flashcut.app.media.EffectPreset.SOFT, com.flashcut.app.media.MusicSynth.Style.LIGHT),
+        Template("⚡", "燃向卡点", "强对比 · 高饱和 · 强节奏",
+            "beat", com.flashcut.app.media.EffectPreset.VIVID, com.flashcut.app.media.MusicSynth.Style.ENERGY),
+        Template("📼", "复古胶片", "低饱和 · 暖调 · 中速",
+            "retro", com.flashcut.app.media.EffectPreset.FILM, com.flashcut.app.media.MusicSynth.Style.WARM),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,41 +47,26 @@ class OnscreenActivity : AppCompatActivity() {
         styleAdapter = StyleAdapter(styles) { picked ->
             selectedStyle = picked.style
             styleAdapter?.select(picked.style)
-            binding.tvEffects.text = effectsFor(picked.style)
+            // 真正写进渲染配置，导出时生效
+            AnalysisCache.effectPreset = picked.effect.id
+            AnalysisCache.musicStyle = picked.music.id
+            binding.tvEffects.text = effectsFor(picked)
         }
         binding.rvStyles.adapter = styleAdapter
-        binding.tvEffects.text = effectsFor(selectedStyle)
+        binding.tvEffects.text = effectsFor(styles.first { it.style == selectedStyle })
     }
 
-    private fun effectsFor(key: String): String = when (key) {
-        "fresh" -> buildString {
-            appendLine("✓ 调色 LUT　日系明亮")
-            appendLine("✓ 镜头稳定　自动防抖")
-            appendLine("✓ 速度曲线　高频切换")
-            appendLine("✓ 转场特效　硬切为主")
-            append("○ 画面动态　轻微呼吸感")
-        }
-        "beat" -> buildString {
-            appendLine("✓ 调色 LUT　强对比")
-            appendLine("✓ 镜头稳定　自动防抖")
-            appendLine("✓ 速度曲线　鼓点卡点")
-            appendLine("✓ 转场特效　闪白 / 缩放冲击")
-            append("✓ 画面动态　节奏抖动")
-        }
-        "retro" -> buildString {
-            appendLine("✓ 调色 LUT　复古胶片颗粒")
-            appendLine("✓ 镜头稳定　自动防抖")
-            appendLine("✓ 速度曲线　慢推镜头")
-            appendLine("✓ 转场特效　叠化 0.5s")
-            append("○ 画面动态　缓慢推进")
-        }
-        else -> buildString {
-            appendLine("✓ 调色 LUT　冷调低饱和")
-            appendLine("✓ 镜头稳定　自动防抖")
-            appendLine("✓ 速度曲线　高潮慢放 0.8×")
-            appendLine("✓ 转场特效　叠化 0.3s")
-            append("○ 画面动态　宽银幕黑边")
-        }
+    /**
+     * 描述这套模板实际会做什么。
+     * 只写真正实现的能力，不再列「防抖 / 变速转场」这类没做的项。
+     */
+    private fun effectsFor(t: Template): String = buildString {
+        appendLine("✓ 调色风格　${t.effect.label}　${t.effect.desc}")
+        appendLine("✓ 背景音乐　${t.music.label}　${t.music.bpm} BPM")
+        appendLine("✓ 字幕烧录　按脚本逐句叠加进画面")
+        appendLine("✓ 多段合成　按剪辑脚本顺序拼接")
+        appendLine("✓ 竖屏输出　9:16 · 1280P")
+        append("✓ 配音　系统 TTS 合成（可选）")
     }
 
     private fun buildTabs() {

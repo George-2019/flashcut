@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import java.io.File
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -52,7 +53,7 @@ class DebugActivity : AppCompatActivity() {
     private fun runSelfTest() {
         binding.tvOutput.text = "自检运行中…"
         lifecycleScope.launch {
-            val uris = findSampleVideos()
+            val uris = scanVideoFiles().ifEmpty { findSampleVideos() }
             DebugLog.i(this@DebugActivity, "Debug", "自检素材 ${uris.size} 段")
             val result = SelfTest.run(this@DebugActivity, uris)
             binding.tvOutput.text = result + "\n\n--- 完整日志 ---\n" + DebugLog.recent()
@@ -60,6 +61,36 @@ class DebugActivity : AppCompatActivity() {
     }
 
     /** 从相册取最多 2 个视频用于自检 */
+    /**
+     * 直接扫文件系统找视频。
+     * MediaStore 需要 READ_MEDIA_VIDEO 权限，而 App 里申请权限又要用户点确认，
+     * 自动化测试不该卡在这里，所以用文件路径直接读。
+     */
+    private fun scanVideoFiles(): List<Uri> {
+        val dirs = listOf(
+            "/sdcard/DCIM/Camera",
+            "/sdcard/Movies",
+            "/sdcard/Download",
+            "/sdcard/Pictures",
+        )
+        val out = mutableListOf<Uri>()
+        for (d in dirs) {
+            runCatching {
+                File(d).listFiles()?.asSequence()
+                    ?.filter { it.isFile && it.length() > 200_000 }
+                    ?.filter { f ->
+                        val n = f.name.lowercase()
+                        n.endsWith(".mp4") || n.endsWith(".mov") || n.endsWith(".mkv") || n.endsWith(".3gp")
+                    }
+                    ?.sortedByDescending { it.lastModified() }
+                    ?.take(2)
+                    ?.forEach { out += Uri.fromFile(it) }
+            }
+            if (out.size >= 2) break
+        }
+        return out.take(2)
+    }
+
     private fun findSampleVideos(): List<Uri> {
         val out = mutableListOf<Uri>()
         runCatching {
