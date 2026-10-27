@@ -147,9 +147,30 @@ class LlmClient {
         val body = buildChatBody(profile, system, user, profile.supportsJsonMode)
         when (val r = post(profile.chatUrl(), apiKey, body, profile.timeoutSec)) {
             is LlmResult.Err -> r
-            is LlmResult.Ok -> LlmResult.Ok(stripFence(extractContent(r.value)))
+            is LlmResult.Ok -> {
+                val content = stripFence(extractContent(r.value))
+                // 正文为空多半是被截断（推理模型常见），给出可执行的提示
+                if (content.isBlank()) {
+                    val (finish, reasonTokens) = finishInfo(r.value)
+                    return@withContext LlmResult.Err(
+                        if (finish == "length") ReasoningModel.truncatedHint(profile.model, reasonTokens)
+                        else "模型返回了空内容（finish_reason=$finish），请更换模型或调大输出上限"
+                    )
+                }
+                LlmResult.Ok(content)
+            }
         }
     }
+
+    /** 读出 finish_reason 与推理 token 数，用于诊断截断 */
+    private fun finishInfo(raw: String): Pair<String, Int> = runCatching {
+        val root = JSONObject(raw)
+        val choice = root.optJSONArray("choices")?.optJSONObject(0)
+        val finish = choice?.optString("finish_reason").orEmpty()
+        val details = root.optJSONObject("usage")?.optJSONObject("completion_tokens_details")
+        val reasoning = details?.optInt("reasoning_tokens") ?: 0
+        finish to reasoning
+    }.getOrDefault("" to 0)
 
     /** 通用调用：system + user 直接要 JSON 文本，供上层自行解析。 */
     suspend fun generateRaw(
@@ -161,9 +182,21 @@ class LlmClient {
         val body = buildChatBody(profile, system, user, profile.supportsJsonMode)
         when (val r = post(profile.chatUrl(), apiKey, body, profile.timeoutSec)) {
             is LlmResult.Err -> r
-            is LlmResult.Ok -> LlmResult.Ok(stripFence(extractContent(r.value)))
+            is LlmResult.Ok -> {
+                val content = stripFence(extractContent(r.value))
+                // 正文为空多半是被截断（推理模型常见），给出可执行的提示
+                if (content.isBlank()) {
+                    val (finish, reasonTokens) = finishInfo(r.value)
+                    return@withContext LlmResult.Err(
+                        if (finish == "length") ReasoningModel.truncatedHint(profile.model, reasonTokens)
+                        else "模型返回了空内容（finish_reason=$finish），请更换模型或调大输出上限"
+                    )
+                }
+                LlmResult.Ok(content)
+            }
         }
     }
+
 
     // ---------- 内部实现 ----------
 
@@ -175,7 +208,8 @@ class LlmClient {
     ): JSONObject = JSONObject().apply {
         put("model", profile.model)
         put("temperature", profile.temperature.toDouble())
-        put("max_tokens", profile.maxTokens)
+        // 推理模型要额外预算，否则思考过程会把额度吃光导致正文为空
+        put("max_tokens", ReasoningModel.tokenBudget(profile.model, profile.maxTokens))
         put("stream", false)
         if (jsonMode) put("response_format", JSONObject().put("type", "json_object"))
         put(
