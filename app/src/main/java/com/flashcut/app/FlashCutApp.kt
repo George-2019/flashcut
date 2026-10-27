@@ -13,7 +13,6 @@ class FlashCutApp : Application() {
         instance = this
         cleanupTmp()
         seedDefaultLlm()
-        repairWorkbuddyUrl()
         autoProbeWorkbuddy()
         installCrashHandler()
         runCatching { com.flashcut.app.dev.UiAuditor(this).install() }
@@ -26,31 +25,11 @@ class FlashCutApp : Application() {
     }
 
     /**
-     * 修复 WorkBuddy 地址：127.0.0.1 / localhost 在手机上指向手机自身，
-     * 那里没有服务。若检测到这类无效地址，自动恢复成可用的默认地址。
-     */
-    private fun repairWorkbuddyUrl() {
-        runCatching {
-            val store = com.flashcut.app.llm.LlmConfigStore(this)
-            val profile = store.loadActive()
-            if (profile.id != "workbuddy") return@runCatching
-
-            // 已知失效地址：127.0.0.1（手机自身）与旧版遗留的 10.66.11.69
-            val bad = profile.baseUrl.contains("127.0.0.1") ||
-                profile.baseUrl.contains("localhost") ||
-                profile.baseUrl.contains("10.66.11.69") ||
-                profile.baseUrl.contains("172.19.0.1")
-            if (!bad) return@runCatching
-
-            val fixed = profile.copy(baseUrl = BuildConfig.WORKBUDDY_CANDIDATES.substringBefore(","))
-            store.save(fixed, store.apiKey(profile.id))
-            DebugLog.i(this, "Config", "地址 ${profile.baseUrl} 在手机上不可用，已恢复为 ${fixed.baseUrl}")
-        }
-    }
-
-    /**
-     * 容器服务地址会随网络变化（10.x 私网、宿主 IP 等）。
-     * 启动时并发探测候选地址，选中可用的那个，避免用户手动改。
+     * 启动时自动定位 WorkBuddy 服务。
+     *
+     * App 和服务跑在同一台设备上，127.0.0.1 与各网卡 IP 都可达；
+     * 网络切换后 IP 会变，所以每次启动重新枚举并探测，不写死地址。
+     * 当前地址可用就保留（尊重用户手动配置）。
      */
     private fun autoProbeWorkbuddy() {
         kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -59,20 +38,23 @@ class FlashCutApp : Application() {
                 val profile = store.loadActive()
                 if (profile.id != "workbuddy") return@launch
 
-                val candidates = store.workbuddyCandidates()
-                if (candidates.isEmpty()) return@launch
-
-                // 当前地址已经可用就不用折腾
-                val currentOk = com.flashcut.app.llm.EndpointProbe.pickBest(listOf(profile.baseUrl)) != null
-                if (currentOk) {
+                // 当前地址可用则不动
+                if (com.flashcut.app.llm.EndpointProbe.pickBest(listOf(profile.baseUrl)) != null) {
                     DebugLog.i(this@FlashCutApp, "Probe", "当前地址可用：${profile.baseUrl}")
                     return@launch
                 }
 
-                val best = com.flashcut.app.llm.EndpointProbe.pickBest(candidates) ?: return@launch
+                // 本机地址 + 历史候选一起探
+                val candidates = com.flashcut.app.llm.EndpointProbe.localHosts() +
+                    store.workbuddyCandidates()
+                val best = com.flashcut.app.llm.EndpointProbe.pickBest(candidates)
+                if (best == null) {
+                    DebugLog.i(this@FlashCutApp, "Probe", "未找到可用服务，保持原配置")
+                    return@launch
+                }
                 if (best != profile.baseUrl) {
                     store.save(profile.copy(baseUrl = best), store.apiKey(profile.id))
-                    DebugLog.i(this@FlashCutApp, "Probe", "已自动切换地址 ${profile.baseUrl} → $best")
+                    DebugLog.i(this@FlashCutApp, "Probe", "自动切换 ${profile.baseUrl} → $best")
                 }
             }.onFailure {
                 DebugLog.e(this@FlashCutApp, "Probe", "地址探测失败", it)

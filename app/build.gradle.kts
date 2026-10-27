@@ -12,13 +12,13 @@ android {
         applicationId = "com.flashcut.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "0.14.0"
+        versionCode = 15
+        versionName = "0.15.0"
 
         // WorkBuddy 本机服务地址：可通过 gradle 属性覆盖
         //   ./gradlew assembleDebug -PworkbuddyBaseUrl=http://10.66.11.69:8791/v1
         val workbuddyBaseUrl = (project.findProperty("workbuddyBaseUrl") as String?)
-            ?: "http://10.191.203.227:8791/v1"
+            ?: "http://127.0.0.1:8791/v1"
         buildConfigField("String", "WORKBUDDY_BASE_URL", "\"$workbuddyBaseUrl\"")
 
         // WorkBuddy API Key：不在源码里写死，构建时通过
@@ -31,7 +31,7 @@ android {
         // 容器/本机服务可能的多个地址，供 App 内快速切换
         // 手机侧可达的地址：容器服务通过宿主机 IP 暴露
         val candidates = (project.findProperty("workbuddyCandidates") as String?)
-            ?: "http://10.191.203.227:8791/v1,http://10.66.11.69:8791/v1,http://127.0.0.1:8791/v1"
+            ?: "http://127.0.0.1:8791/v1,http://10.66.11.69:8791/v1"
         buildConfigField("String", "WORKBUDDY_CANDIDATES", "\"$candidates\"")
     }
 

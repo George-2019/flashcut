@@ -46,9 +46,12 @@ class ScriptGenerator(private val client: LlmClient = LlmClient()) {
             硬性要求：
             1. cuts 里的 shotId 必须来自输入清单，不能编造；
             2. 每个 cut 的 out > in，且 out <= 该镜头的 duration；
-            3. 所有 cut 时长加起来尽量接近目标秒数，误差不超过 15%；
-            4. 按情绪曲线排序，优先选 score 高的镜头；
-            5. caption 每条不超过 18 个汉字，口语化。
+            3. 单个 cut 时长控制在 1.5-5 秒，这是短视频的常规节奏；
+            4. 所有 cut 时长加起来要非常接近目标秒数（误差 10% 以内）；
+            5. 同一个 shotId 最多用一次，不要重复切同一段画面；
+            6. 尽量从不同素材里选镜头，避免成片看起来单调；
+            7. 第一个 cut 要选 score 最高或最抓人的画面，前三秒决定留存；
+            8. caption 每条不超过 18 个汉字，口语化，与画面内容相符。
         """.trimIndent()
 
         val shots = JSONArray()
@@ -59,16 +62,28 @@ class ScriptGenerator(private val client: LlmClient = LlmClient()) {
                     put("title", s.title)
                     put("duration", String.format("%.1f", s.durationMs / 1000f))
                     put("score", s.score)
+                    put("from", s.sourceId)
                     put("reason", s.reason)
                 }
             )
         }
+        // 给模型一份素材概览，帮它判断节奏与素材是否够用
+        val bySource = brief.shots.groupBy { it.sourceId }
+        val overview = bySource.entries.joinToString("；") { (src, list) ->
+            val d = list.sumOf { it.durationMs } / 1000.0
+            "$src: ${list.size} 个镜头, 共 ${String.format("%.1f", d)} 秒, 均分 ${list.map { it.score }.average().toInt()}"
+        }
+        val usableSec = brief.shots.sumOf { it.durationMs } / 1000.0
+
         val user = buildString {
             appendLine("剪辑风格：${styleName[style] ?: styleName["vlog"]}")
             appendLine("目标时长：${targetSec} 秒")
             appendLine("素材主题：${brief.theme}")
             if (brief.speech.isNotBlank()) appendLine("语音要点：${brief.speech}")
             if (hint.isNotBlank()) appendLine("用户补充要求：$hint")
+            appendLine("素材概览：$overview")
+            appendLine("可用总时长：${String.format("%.1f", usableSec)} 秒" +
+                if (usableSec < targetSec) "（不足目标时长，请尽量用满所有素材）" else "")
             appendLine("镜头清单：")
             append(shots.toString())
         }
@@ -165,6 +180,8 @@ class ScriptGenerator(private val client: LlmClient = LlmClient()) {
                     "模型给的编号：${rawCuts.firstOrNull().orEmpty()}"
             )
         }
+        // 模型给的 cuts 偏粗糙，交给精剪器收敛时长、去重、补字幕
+        val refined = EditRefiner.refine(cuts, brief, targetSec, style)
         val script = EditScript(
             title = o.optString("title", "闪剪成片"),
             style = style,
@@ -172,36 +189,23 @@ class ScriptGenerator(private val client: LlmClient = LlmClient()) {
             narration = o.optString("narration"),
             music = o.optString("music", "轻快电子"),
             effectNote = o.optString("effect", "叠化衔接 + 暖色 LUT"),
-            captions = cuts.map { it.caption },
-            cuts = cuts,
+            captions = refined.cuts.map { it.caption },
+            cuts = refined.cuts,
         )
         LlmResult.Ok(script)
     }.getOrElse { e ->
         LlmResult.Err("脚本解析失败：${e.message}")
     }
 
-    /** 大模型不可用时的兜底：按分数取前 N 个镜头拼到目标时长。 */
+    /** 大模型不可用时的兜底：按分数轮转素材取高光段，交给精剪器收敛。 */
     fun fallback(brief: MaterialBrief, style: String, targetSec: Int): EditScript {
-        val budget = targetSec * 1000L
-        val cuts = mutableListOf<ScriptCut>()
-        var used = 0L
-        for (s in brief.shots) {
-            if (used >= budget) break
-            val take = minOf(s.durationMs, budget - used, 6000L)
-            if (take < 800) continue
-            cuts += ScriptCut(
-                shotId = s.id,
-                sourceId = s.sourceId,
-                inMs = 0,
-                outMs = take,
-                caption = "",
+        if (brief.shots.isEmpty()) {
+            return EditScript(
+                title = "本地规则成片", style = style,
+                targetDurationSec = targetSec, cuts = emptyList(),
             )
-            used += take
         }
-        if (cuts.isEmpty() && brief.shots.isNotEmpty()) {
-            val s = brief.shots.first()
-            cuts += ScriptCut(s.id, s.sourceId, 0, s.durationMs.coerceAtMost(budget))
-        }
+        val refined = EditRefiner.refine(emptyList(), brief, targetSec, style)
         return EditScript(
             title = "本地规则成片",
             style = style,
@@ -209,7 +213,8 @@ class ScriptGenerator(private val client: LlmClient = LlmClient()) {
             narration = "",
             music = "轻快电子",
             effectNote = "叠化衔接",
-            cuts = cuts,
+            captions = refined.cuts.map { it.caption },
+            cuts = refined.cuts,
         )
     }
 }
