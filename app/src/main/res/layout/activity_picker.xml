@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg">
+
+    <!-- 顶栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="@dimen/pad"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="10dp"
+            android:text="‹"
+            android:textColor="@color/text"
+            android:textSize="26sp" />
+
+        <TextView
+            style="@style/Text.Title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="导入多段素材" />
+
+        <TextView
+            android:id="@+id/tvCount"
+            style="@style/Text.Sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="已选 0 段" />
+    </LinearLayout>
+
+    <!-- 导入入口 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/pad"
+        android:layout_marginEnd="@dimen/pad"
+        android:background="@drawable/bg_card_brand"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📁"
+            android:textSize="22sp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/Text.Body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="多选导入"
+                android:textStyle="bold" />
+
+            <TextView
+                style="@style/Text.Tiny"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="支持 1080P/4K、HEVC" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnPick"
+            style="@style/Chip.On"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/Text.Sub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/pad"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="素材列表" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSources"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingStart="@dimen/pad"
+        android:paddingEnd="@dimen/pad"
+        android:clipToPadding="false"
+        android:scrollbars="none" />
+
+    <!-- 底部统计 + 下一步 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/pad"
+        android:background="@color/panel">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:id="@+id/tvTotal"
+                style="@style/Text.Body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="共 0 秒"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvShots"
+                style="@style/Text.Tiny"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="预计 0 个可用镜头" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnNext"
+            style="@style/Btn.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="下一步：让 AI 理解内容" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c0d12">
+<title>闪剪 FlashCut v0.2 · 全链路智能剪辑原型</title>
+<style>
+:root{--bg:#0c0d12;--panel:#15171f;--panel2:#1c1f2b;--line:#292c3a;--text:#f2f3f8;--sub:#888ea3;--brand:#7b5cff;--brand2:#ff5c8a;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--r:16px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#050609;color:var(--text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center;min-height:100vh}
+#app{width:100%;max-width:414px;min-height:100vh;background:var(--bg);position:relative;overflow-x:hidden;padding-bottom:86px}
+@media(min-width:500px){body{padding:24px 0}#app{border:1px solid #262a38;border-radius:34px;min-height:840px;box-shadow:0 30px 90px #000a;overflow:hidden}}
+header{padding:16px 16px 4px;display:flex;align-items:center;gap:9px;min-height:56px}
+h1{font-size:19px;margin:0;letter-spacing:.2px;line-height:1.3}h2{font-size:15px;margin:0 0 10px}h3{font-size:13.5px;margin:0}
+.sub{color:var(--sub);font-size:11.5px;line-height:1.5}.grow{flex:1}.row{display:flex;align-items:center;gap:9px}.wrap{padding:10px 16px 20px}.center{text-align:center}
+.logo{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;font-weight:800;font-size:16px;box-shadow:0 5px 16px #7b5cff44;flex-shrink:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px;margin-bottom:11px}
+.card.flat{padding:0;overflow:hidden}
+.hero{background:linear-gradient(135deg,#251c4f,#3a1c3d 55%,#151d33);border:1px solid #483a78;border-radius:20px;padding:17px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:180px;height:180px;right:-70px;top:-80px;border-radius:50%;background:radial-gradient(circle,#7b5cff55,transparent 70%);pointer-events:none}
+.hero h2{font-size:18px;margin:0 0 5px}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none;text-align:left}
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:13px;border-radius:13px;font-weight:600;font-size:14.5px;background:linear-gradient(90deg,var(--brand),#9c5cff);box-shadow:0 7px 20px #7b5cff2e;margin-top:10px;text-align:center}
+.btn.ghost{background:var(--panel2);box-shadow:none;border:1px solid var(--line);color:#c9cce0}
+.btn.small{width:auto;padding:8px 14px;font-size:12.5px;margin:0;border-radius:10px}
+.btn:disabled{opacity:.6}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{padding:7px 11px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-size:12px;color:var(--sub);cursor:pointer;white-space:nowrap}
+.chip.on{background:#7b5cff22;border-color:var(--brand);color:#cdbcff}
+.tag{font-size:9.5px;padding:2px 6px;border-radius:5px;background:#7b5cff22;color:#cdbcff;white-space:nowrap}
+.tag.g{background:#34d3991c;color:var(--green)}.tag.y{background:#fbbf241c;color:var(--yellow)}.tag.r{background:#f871711c;color:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.thumb{aspect-ratio:3/4;border-radius:10px;position:relative;overflow:hidden;border:2px solid transparent;background:#222;cursor:pointer}
+.thumb.sel{border-color:var(--brand)}.thumb.sel:after{content:"";position:absolute;inset:0;background:#7b5cff22}
+.thumb .badge{position:absolute;left:5px;bottom:5px;font-size:9.5px;background:#0009;padding:1px 4px;border-radius:4px;z-index:1}
+.thumb .check{position:absolute;right:5px;top:5px;width:18px;height:18px;border-radius:50%;background:#0007;border:1.5px solid #fff8;display:grid;place-items:center;font-size:10px;z-index:1}
+.thumb.sel .check{background:var(--brand);border-color:var(--brand)}
+.t1{background:linear-gradient(160deg,#f6b26b,#ef7a56 45%,#573a6b)}.t2{background:linear-gradient(200deg,#3fc99b,#17568f)}.t3{background:linear-gradient(160deg,#2fcdd0,#2c0a5c)}.t4{background:linear-gradient(200deg,#ff98a0,#9c86cf)}.t5{background:linear-gradient(160deg,#f8bce6,#7e66c4)}.t6{background:linear-gradient(200deg,#7fe8a8,#3d6899)}.t7{background:linear-gradient(160deg,#ffd166,#c2410c)}.t8{background:linear-gradient(200deg,#67e8f9,#4338ca)}.t9{background:linear-gradient(160deg,#f472b6,#581c87)}
+.scrollx{display:flex;gap:9px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}.scrollx::-webkit-scrollbar{display:none}
+.scrollx .modecard{min-width:118px;padding:10px;border-radius:13px;background:var(--panel);border:1px solid var(--line);cursor:pointer}
+.scrollx .modecard.on{border-color:var(--brand);background:#7b5cff18}
+.scrollx .modecard b{display:block;font-size:12.5px;margin-top:6px}.scrollx .modecard i{font-style:normal;font-size:20px}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:414px;background:#10121ae8;backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;padding:8px 0 12px;z-index:5}
+.nav button{flex:1;color:var(--sub);font-size:10px;display:grid;gap:2px;place-items:center;text-align:center}.nav button b{font-size:18px;font-weight:400}.nav button.on{color:#cdbcff}
+.screen{display:none;animation:fade .22s}.screen.on{display:block}@keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.bar{height:6px;border-radius:5px;background:#252838;overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:5px;transition:width .35s}
+.step{display:flex;gap:10px;padding:9px 0;align-items:flex-start}
+.dot{width:20px;height:20px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:10px;flex-shrink:0;margin-top:1px;color:var(--sub)}
+.step.done .dot{background:#34d3991c;color:var(--green);border-color:#34d39955}.step.now .dot{background:#7b5cff33;color:#cdbcff;border-color:var(--brand);animation:pulse 1.4s infinite}@keyframes pulse{50%{box-shadow:0 0 0 5px #7b5cff15}}
+.step .txt{flex:1}.step small{color:var(--sub);font-size:11px}
+.player{border-radius:16px;background:linear-gradient(170deg,#2b3a67,#7a4a6e 55%,#d99a6c);position:relative;overflow:hidden;aspect-ratio:9/14;display:flex;flex-direction:column;justify-content:flex-end;padding:13px}
+.player.wide{aspect-ratio:16/9;justify-content:center;align-items:center}
+.player .cap{background:#000a;padding:4px 8px;border-radius:6px;font-size:13px;font-weight:600;text-align:center;margin-bottom:8px;backdrop-filter:blur(4px)}
+.player .top{position:absolute;top:11px;left:11px;right:11px;display:flex;justify-content:space-between;font-size:10px;color:#fff}
+.playbtn{position:absolute;top:43%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;border-radius:50%;background:#ffffff26;border:1px solid #fff5;display:grid;place-items:center;font-size:18px;backdrop-filter:blur(6px);color:#fff}
+.player .eff{position:absolute;inset:0;pointer-events:none}
+.fx-lut{background:linear-gradient(180deg,transparent 40%,#f7a35c2e)}.fx-shake{background:linear-gradient(90deg,#ff004c12,#00e0ff12)}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #242735;font-size:13.5px}.kv:last-child{border:0;padding-bottom:2px}.kv:first-child{padding-top:2px}.kv>span{color:var(--sub);flex-shrink:0}
+.switch{width:40px;height:23px;border-radius:20px;background:var(--brand);position:relative;flex-shrink:0;cursor:pointer}.switch:after{content:"";position:absolute;width:17px;height:17px;background:#fff;border-radius:50%;right:3px;top:3px;transition:.2s}.switch.off{background:#2c3040}.switch.off:after{left:3px;right:auto}
+.notefab{position:fixed;right:12px;bottom:92px;z-index:9;background:#1c1f2bf2;border:1px solid #3a3e52;border-radius:20px;padding:8px 13px;font-size:11.5px;color:#cdbcff;box-shadow:0 8px 22px #0008}
+#menu{position:fixed;inset:0;background:#050609f5;z-index:20;display:none;padding:22px 18px;overflow:auto}#menu.on{display:block}
+#menu button.item{display:block;width:100%;max-width:414px;margin:0 auto 7px;padding:11px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;font-size:13.5px}
+.notice{font-size:11.5px;color:var(--sub);background:#7b5cff10;border:1px dashed #7b5cff44;padding:9px 11px;border-radius:10px;margin-bottom:12px;line-height:1.6}
+.notice b{color:#cdbcff}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#34d399,#17568f);flex-shrink:0}
+.hr{height:1px;background:var(--line);margin:13px 0}
+.back{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--panel2);border:1px solid var(--line);font-size:17px;color:#cfd2e2;flex-shrink:0}
+/* scene / highlight */
+.scene{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid #21242f;align-items:center}.scene:last-child{border:0}
+.scene .pic{width:54px;height:40px;border-radius:7px;flex-shrink:0;position:relative;overflow:hidden}
+.scene .n{font-size:10px;background:#0008;position:absolute;left:3px;top:3px;padding:0 3px;border-radius:3px}
+.score{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:700;border:2px solid var(--green);color:var(--green);flex-shrink:0}
+.score.mid{border-color:var(--yellow);color:var(--yellow)}.score.low{border-color:#555a6e;color:#888ea3}
+.mins{font-size:11px;color:var(--sub);line-height:1.45}
+/* script */
+.script{background:#101219;border:1px solid var(--line);border-radius:12px;padding:11px;font-size:12.5px;line-height:1.7}
+.script .scene-row{padding:8px 0;border-bottom:1px dashed #252838}.script .scene-row:last-child{border:0}
+.script .who{font-size:10px;color:var(--brand);margin-right:5px}
+.script .vo{color:#e7e9f5}.script .sc{color:var(--sub);font-size:11px;margin-top:3px}
+/* template */
+.tpl{display:flex;gap:10px;padding:9px;border-radius:13px;border:1px solid var(--line);background:var(--panel);margin-bottom:8px;cursor:pointer}
+.tpl.on{border-color:var(--brand);background:#7b5cff15}
+.tpl .vis{width:64px;height:76px;border-radius:8px;flex-shrink:0;position:relative}
+.tpl .vis .cap{position:absolute;bottom:6px;left:4px;right:4px;font-size:8px;text-align:center;background:#0008;border-radius:3px}
+/* subtitle */
+.rows{max-height:270px;overflow:auto;border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+.srow{display:flex;gap:8px;padding:9px 10px;border-bottom:1px solid #21242f;font-size:12.5px}.srow:last-child{border:0}.srow .time{color:var(--sub);font-size:10px;width:62px;flex-shrink:0;padding-top:2px}.srow input{width:100%;background:transparent;border:0;color:var(--text);font:inherit;outline:none;padding:0}.srow:focus-within{background:#7b5cff0f}
+.substyle{display:flex;gap:8px;overflow-x:auto}.sstyle{min-width:82px;height:56px;border-radius:9px;border:2px solid transparent;display:grid;place-items:center;background:#101219;color:#fff;font-size:11px;font-weight:800;cursor:pointer}.sstyle.on{border-color:var(--brand)}
+/* timeline */
+.tl{background:#0a0b10;border:1px solid var(--line);border-radius:12px;padding:8px;overflow:hidden;position:relative}
+.ruler{display:flex;justify-content:space-between;font-size:9px;color:#6d7288;margin-bottom:5px;padding:0 1px}
+.track{display:flex;gap:2px;margin-bottom:4px;height:38px;position:relative}
+.track.small{height:18px}.track.mid{height:24px}
+.clip{position:relative;border-radius:5px;overflow:hidden;min-width:0;cursor:pointer;border:1.5px solid transparent;flex-shrink:0}
+.clip.on{border-color:#fff;box-shadow:0 0 0 2px #7b5cff88}
+.clip span{position:absolute;left:3px;bottom:1px;right:2px;font-size:8.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px #000c}
+.clip .fx{position:absolute;right:2px;top:1px;font-size:7px;background:#000a;border-radius:3px;padding:0 2px}
+.cap-clip{background:#3d3364}.audio-clip{background:repeating-linear-gradient(90deg,#2b7a63 0 2px,#193f36 2px 4px)}.voice-clip{background:repeating-linear-gradient(90deg,#7a4a8c 0 2px,#43274f 2px 4px)}
+.playhead{position:absolute;top:14px;bottom:8px;width:2px;background:#ff5c8a;left:38%;z-index:3;pointer-events:none}.playhead:before{content:"";position:absolute;top:-5px;left:-4px;width:10px;height:6px;background:#ff5c8a;border-radius:2px}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;font-size:10px;color:var(--sub);margin-top:10px}
+.tools button{padding:9px 1px;background:var(--panel);border:1px solid var(--line);border-radius:10px;text-align:center}.tools b{display:block;font-size:16px;color:var(--text);font-weight:400;margin-bottom:2px}
+.frame-strip{display:flex;gap:2px;overflow:hidden;border-radius:6px;margin-bottom:9px}.frame-strip div{height:34px;flex:1;background:#222;position:relative}.frame-strip .k{flex:2.2}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px;color:var(--sub);margin-top:8px}.meta div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center}.meta b{display:block;color:var(--text);font-size:12px;font-weight:600}
+.prog{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--sub)}
+/* export */
+.res-opt{display:flex;gap:6px}.res-opt .chip{padding:5px 9px;font-size:11px}
+.checkline{display:flex;gap:7px;align-items:flex-start;font-size:12px;color:#c9cce0;padding:5px 0}.checkline:before{content:"✓";color:var(--green);font-size:11px;margin-top:1px}
+.field{margin:10px 0}.field label{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--sub);margin-bottom:5px}
+.field input{width:100%;background:#0c0e15;border:1px solid var(--line);border-radius:9px;color:var(--text);font:13px ui-monospace,SFMono-Regular,Menlo,monospace;padding:9px 10px;outline:none}
+.field input:focus{border-color:var(--brand);box-shadow:0 0 0 3px #7b5cff18}
+.field .hint{font-size:10.5px;margin-top:4px}
+</style>
+</head>
+<body>
+<div id="app">
+<section class="screen on" id="home">
+<header><div class="logo">闪</div><div><h1>闪剪 FlashCut</h1><div class="sub">多段素材，一条指令成片</div></div><div class="grow"></div><div class="avatar"></div></header>
+<div class="wrap">
+<div class="hero"><span class="tag">v0.3 全链路</span><h2>大模型先看懂，再动手剪</h2><p class="sub" style="max-width:270px;margin:0 0 4px">导入多段视频，自动提取高光、写成片脚本、套模板加特效、配音配乐、生成字幕，最后可逐帧精修。</p><button class="btn" data-go="picker" style="max-width:210px">✦ 开始智能成片</button></div>
+<div class="row" style="margin:18px 0 10px"><h2 style="margin:0">这次想剪什么？</h2><div class="grow"></div><span class="sub">决定模板与节奏</span></div>
+<div class="scrollx" id="modes">
+<button class="modecard on" data-mode="vlog"><i>⛰</i><b>旅行 / 生活 Vlog</b><span class="sub">舒缓叙事 · 高光混剪</span></button>
+<button class="modecard" data-mode="beat"><i>🔥</i><b>情绪卡点 / 燃向</b><span class="sub">音乐驱动 · 重特效</span></button>
+<button class="modecard" data-mode="talk"><i>🎙</i><b>口播 / 播客切片</b><span class="sub">删停顿 · 强字幕</span></button>
+<button class="modecard" data-mode="sell"><i>🛍</i><b>好物 / 带货</b><span class="sub">快节奏 · 卖点字幕</span></button>
+</div>
+<div class="row" style="margin:20px 0 10px"><h2 style="margin:0">上次的精剪项目</h2><div class="grow"></div><button class="sub" data-go="projects">全部 ›</button></div>
+<div class="card row" data-go="timeline"><div class="thumb t3" style="width:48px;flex-shrink:0"></div><div class="grow"><h3>大理旅行 · 精修版</h3><div class="sub">3 段素材合成 · 32 秒 · 4 条轨道</div></div><span class="tag g">自动保存</span></div>
+<div class="card"><div class="row" style="margin-bottom:9px"><h3>本地能力自检</h3><div class="grow"></div><span class="tag g">全部就绪</span></div>
+<div class="checkline">端侧语音识别（中英）</div><div class="checkline">镜头与高光分析</div><div class="checkline">TTS 配音与音乐库</div><div class="checkline">硬件编码导出</div></div>
+</div></section>
+
+<section class="screen" id="picker">
+<header><button class="back" data-back>‹</button><h1>导入多段素材</h1><div class="grow"></div><span class="sub" id="selcount">已选 6 段</span></header>
+<div class="wrap">
+<div class="notice">可一次选多段，也可从<b>抖音/相册/文件</b>导入。单段建议不超过 10 分钟；总素材 4 分钟以内体验最佳。</div>
+<div class="card row" style="padding:10px 12px"><span>📁</span><div class="grow"><b style="font-size:12.5px">多选导入</b><div class="sub">已支持 1080P/4K、HEVC、Live Photo</div></div><button class="chip" data-go="analysis">导入完成</button></div>
+<div class="chips" style="margin:12px 0"><span class="chip on">最近项目</span><span class="chip">旅行</span><span class="chip">相机胶卷</span><span class="chip">文件导入</span></div>
+<div class="grid" id="media">
+<div class="thumb t1 sel"><i class="check">✓</i><span class="badge">00:08</span></div>
+<div class="thumb t2 sel"><i class="check">✓</i><span class="badge">00:12</span></div>
+<div class="thumb t3 sel"><i class="check">✓</i><span class="badge">00:06</span></div>
+<div class="thumb t4 sel"><i class="check">✓</i><span class="badge">00:15</span></div>
+<div class="thumb t5 sel"><i class="check">✓</i><span class="badge">00:21</span></div>
+<div class="thumb t6 sel"><i class="check">✓</i><span class="badge">00:09</span></div>
+<div class="thumb t7"><i class="check"></i><span class="badge">00:18</span></div>
+<div class="thumb t8"><i class="check"></i><span class="badge">00:11</span></div>
+<div class="thumb t9"><i class="check"></i><span class="badge">00:07</span></div>
+</div>
+<p class="sub center" style="margin:12px 0 0">共 71 秒 · 预计可提取 12 个可用镜头</p>
+<div class="card" style="margin-top:12px"><div class="kv">按拍摄时间排列 <div class="switch"></div></div><div class="kv">自动剔除重复/抖动片段 <div class="switch"></div></div><div class="kv">保留原始音频用于识别 <div class="switch"></div></div></div>
+<button class="btn" data-go="analysis">下一步：让 AI 理解内容</button>
+</div></section>
+
+<section class="screen" id="analysis">
+<header><button class="back" data-back>‹</button><h1>AI 理解素材</h1></header>
+<div class="wrap">
+<div class="card" style="border-color:#483a78"><div class="row"><div class="logo" style="width:26px;height:26px;border-radius:8px;font-size:13px">✦</div><div class="grow"><b style="font-size:13px">端云混合分析</b><div class="sub">本地解码与识别 · 云端只收文本与缩略图</div></div><span class="tag g">隐私保护</span></div>
+<div class="hr"></div>
+<div class="step done"><div class="dot">✓</div><div class="txt"><h3>镜头切分 · 6 段素材</h3><small>共识别 14 个镜头，剔除 2 个严重抖动镜头</small></div></div>
+<div class="step done"><div class="dot">✓</div><div class="txt"><h3>端侧语音识别</h3><small>识别 5 段人声，共计 38 秒语音，20 秒环境音</small></div></div>
+<div class="step done"><div class="dot">✓</div><div class="txt"><h3>画面内容理解</h3><small>海边、古城街道、人物特写、日落空镜</small></div></div>
+<div class="step now"><div class="dot">4</div><div class="txt"><h3>大模型生成剪辑脚本</h3><small>结合主题、时长与情绪曲线生成镜头顺序</small></div></div>
+<div class="step"><div class="dot">5</div><div class="txt"><h3>时间线与包装生成</h3><small>等待脚本完成</small></div></div>
+</div>
+<div class="row" style="justify-content:space-between;margin:6px 0"><span class="sub">分析进度</span><span class="sub" id="apct">约 70%</span></div>
+<div class="bar" style="margin-bottom:16px"><i id="abar" style="width:70%"></i></div>
+<button class="btn" data-go="brief">查看理解结果</button>
+<p class="sub center" style="margin-top:8px">分析结果会缓存，重新生成成片时无需重复识别</p>
+</div></section>
+
+<section class="screen" id="brief">
+<header><button class="back" data-back>‹</button><h1>AI 读懂了这些</h1><div class="grow"></div><span class="tag g">14 个镜头</span></header>
+<div class="wrap">
+<div class="card"><div class="row" style="margin-bottom:8px"><h3>素材主题</h3><div class="grow"></div><span class="tag">置信度 92%</span></div><p style="margin:0 0 10px;font-size:13.5px">大理环海路旅行 · 傍晚 · 人像+风景混合素材</p><div class="chips"><span class="chip on">旅行</span><span class="chip on">日落</span><span class="chip on">人像</span><span class="chip">可加旅途旁白</span></div></div>
+<div class="card"><div class="row" style="margin-bottom:4px"><h3>高光镜头（按综合分）</h3><div class="grow"></div><span class="sub">选片依据</span></div>
+<div class="scene"><div class="pic t1"><span class="n">01</span></div><div class="grow"><b style="font-size:12.5px">海边日落全景</b><div class="mins">构图开阔 · 光影强 · 无遮挡</div></div><div class="score">94</div></div>
+<div class="scene"><div class="pic t3"><span class="n">02</span></div><div class="grow"><b style="font-size:12.5px">人物回头特写</b><div class="mins">人脸清晰 · 情绪高点 · 可做封面</div></div><div class="score">91</div></div>
+<div class="scene"><div class="pic t4"><span class="n">03</span></div><div class="grow"><b style="font-size:12.5px">古城街道推镜</b><div class="mins">运动感强 · 适合做转场前的推进</div></div><div class="score mid">77</div></div>
+<div class="scene"><div class="pic t6"><span class="n">04</span></div><div class="grow"><b style="font-size:12.5px">海边奔跑中景</b><div class="mins">轻微抖动，可配合防抖使用</div></div><div class="score low">58</div></div>
+</div>
+<div class="row" style="margin:12px 0 8px"><h3>语音要点</h3><div class="grow"></div><span class="tag y">3 处停顿可删</span></div>
+<div class="script" style="font-size:12px">“今天终于到了洱海……（停顿 2.1 秒）这里的风比想象中大，但日落真的 —— 太值了。”</div>
+<div class="notice" style="margin-top:12px">这些结论会作为大模型的输入，而不是由模型重新看一遍原片；因此重新生成很快。</div>
+<button class="btn" data-go="script">下一步：生成成片脚本</button>
+</div></section>
+
+<section class="screen" id="script">
+<header><button class="back" data-back>‹</button><h1>大模型剪辑脚本</h1><div class="grow"></div><span class="tag g" id="scripttag">Vlog · 30 秒</span></header>
+<div class="wrap">
+<div class="card" style="border-color:#483a78"><div class="sub">一句话指令</div><div style="font-size:13.5px;margin-top:5px;line-height:1.65">“剪一条 30 秒旅行 Vlog，情绪从期待到放松，重点留住日落和人物回头的瞬间，配轻快但不吵的音乐。”</div><div class="chips" style="margin-top:9px"><span class="chip on">9:16</span><span class="chip on">30 秒</span><span class="chip on">旅行 Vlog</span><span class="chip on">AI 旁白</span></div></div>
+<div class="script" id="scriptbody">
+<div class="scene-row"><div class="row"><span class="tag">镜头 1</span><div class="grow"></div><span class="sub">00:00–00:04</span></div><div class="vo" style="margin:4px 0 0">古城街道推镜，字幕“出发”。</div><div class="sc">用途：建立地点；特效：轻推镜 + 胶片颗粒；转场：叠化 0.4s</div></div>
+<div class="scene-row"><div class="row"><span class="tag">镜头 2</span><div class="grow"></div><span class="sub">00:04–00:12</span></div><div class="vo" style="margin:4px 0 0">海边奔跑中景，去掉原声，接入旁白与音乐。</div><div class="sc">用途：情绪上升；特效：速度 0.85× 慢放 + 高光提升</div></div>
+<div class="scene-row"><div class="row"><span class="tag">镜头 3</span><div class="grow"></div><span class="sub">00:12–00:20</span></div><div class="vo" style="margin:4px 0 0">人物回头特写，保留原声一句“太值了”。</div><div class="sc">用途：情绪高点；特效：缓慢放大 + 暖色调；字幕强调</div></div>
+<div class="scene-row"><div class="row"><span class="tag">镜头 4</span><div class="grow"></div><span class="sub">00:20–00:30</span></div><div class="vo" style="margin:4px 0 0">海边日落全景，黑场收尾，字幕“下次见”。</div><div class="sc">用途：收束；特效：渐暗 + 音乐尾音；片尾留 2 秒空镜</div></div>
+</div>
+<div class="card" style="margin-top:11px"><div class="row"><span class="tag y">可调整</span><div class="grow"></div><button class="chip" id="regen">重新生成脚本</button></div><p class="sub" style="margin:8px 0 0">不满意脚本时可只改文字指令；镜头素材、识别结果与模板选择都会保留。</p></div>
+<div class="card"><div class="row" style="margin-bottom:2px"><h3>预计成片参数</h3><div class="grow"></div><span class="sub">由脚本推导</span></div>
+<div class="kv">总时长<span>30 秒</span></div><div class="kv">镜头数<span>4 个（来自 3 段素材）</span></div><div class="kv">模板<span>旅行高光 · 暖色</span></div><div class="kv">配音<span>AI 旁白 · 温柔女声</span></div><div class="kv">音乐<span>Sunny Days · 自动卡点</span></div></div>
+<button class="btn" data-go="onscreen">套用模板并生成成片</button>
+</div></section>
+
+<section class="screen" id="onscreen">
+<header><button class="back" data-back>‹</button><h1>模板与特效</h1></header>
+<div class="wrap">
+<div class="chips" style="margin-bottom:11px" id="tplcat"><span class="chip on">旅行 Vlog</span><span class="chip">情绪卡点</span><span class="chip">口播切片</span><span class="chip">好物分享</span></div>
+<div class="tpl on"><div class="vis t1"><div class="cap">旅行高光</div></div><div class="grow"><div class="row"><b style="font-size:13px">旅行高光 · 暖色</b><div class="grow"></div><span class="tag g">推荐</span></div><div class="sub" style="margin-top:3px">长镜头叙事 · 叠化转场 · 胶片颗粒<br>字幕：底部白字黑边 · 节奏：中速</div><div class="chips" style="margin-top:6px"><span class="chip" style="padding:3px 7px;font-size:10px">叠化 0.4s</span><span class="chip" style="padding:3px 7px;font-size:10px">胶片颗粒</span><span class="chip" style="padding:3px 7px;font-size:10px">暖色调</span></div></div></div>
+<div class="tpl"><div class="vis t3"><div class="cap">电影叙事</div></div><div class="grow"><div class="row"><b style="font-size:13px">电影叙事 · 冷调</b></div><div class="sub" style="margin-top:3px">黑边宽银幕 · 变速转场 · 低饱和<br>字幕：居中衬线 · 节奏：慢</div><div class="chips" style="margin-top:6px"><span class="chip" style="padding:3px 7px;font-size:10px">宽银幕</span><span class="chip" style="padding:3px 7px;font-size:10px">低饱和</span></div></div></div>
+<div class="tpl"><div class="vis t2"><div class="cap">清新日常</div></div><div class="grow"><div class="row"><b style="font-size:13px">清新日常 · 日系</b></div><div class="sub" style="margin-top:3px">明亮 · 高频剪辑 · 手写体字幕<br>字幕：顶部手写 · 节奏：快</div></div></div>
+<div class="card"><div class="row" style="margin-bottom:4px"><h3>自动特效开关</h3><div class="grow"></div><span class="tag">由模板决定，可改</span></div>
+<div class="kv">调色 LUT <div class="switch"></div></div><div class="kv">镜头稳定 <div class="switch"></div></div><div class="kv">速度曲线（高潮慢放） <div class="switch"></div></div><div class="kv">转场特效 <div class="switch"></div></div><div class="kv">画面动态（轻推/放大） <div class="switch off"></div></div></div>
+<div class="notice"><b>规则</b>：模板只给“节奏、转场、字幕样式、音乐类型”的参数，具体镜头仍来自你确认过的脚本，避免套模板后画面与内容脱节。</div>
+<button class="btn" data-go="voice">下一步：配音与配乐</button>
+</div></section>
+
+<section class="screen" id="voice">
+<header><button class="back" data-back>‹</button><h1>配音与配乐</h1><div class="grow"></div><span class="tag g">AI 已完成</span></header>
+<div class="wrap">
+<div class="chips" style="margin-bottom:11px"><span class="chip on">AI 旁白</span><span class="chip">自己录音</span><span class="chip">仅保留原声</span></div>
+<div class="card"><div class="row"><div class="logo" style="width:30px;height:30px;border-radius:9px;font-size:14px">🎙</div><div class="grow"><b style="font-size:13px">温柔女声 · 中文</b><div class="sub">语速 0.95× · 情绪：舒缓 · 试听 00:08</div></div><button class="chip">▶ 试听</button></div>
+<div class="hr"></div><div class="sub" style="margin-bottom:7px">AI 根据画面写好的解说词（可逐句改）</div>
+<div class="script" style="font-size:12.5px;line-height:1.8">“那天傍晚，风从海面吹过来。<br>我们沿着环海路一直往前开，<br>直到太阳把整片洱海染成金色。<br>有些瞬间，值得慢一点记住。”</div>
+<div class="row" style="margin-top:9px"><span class="sub">共 4 句 · 约 18 秒</span><div class="grow"></div><button class="chip">重新配文案</button></div></div>
+<div class="card"><div class="row" style="margin-bottom:7px"><h3>配乐</h3><div class="grow"></div><span class="tag y">2 个候选</span></div>
+<div class="scene" style="border:0;padding:5px 0"><div class="pic t8" style="display:grid;place-items:center;font-size:15px">♫</div><div class="grow"><b style="font-size:12.5px">Sunny Days</b><div class="mins">轻快 · 110 BPM · 适合旅行</div></div><div class="chip on" style="padding:4px 8px;font-size:10px">使用</div></div>
+<div class="scene" style="border:0;padding:5px 0"><div class="pic t5" style="display:grid;place-items:center;font-size:15px">♫</div><div class="grow"><b style="font-size:12.5px">Golden Hour</b><div class="mins">温暖 · 96 BPM · 适合落日</div></div><div class="chip" style="padding:4px 8px;font-size:10px">试听</div></div>
+</div>
+<div class="card"><div class="kv">自动卡点对齐 <div class="switch"></div></div><div class="kv">人声时音乐自动降低 <div class="switch"></div></div><div class="kv">保留原片环境声 <div class="switch"></div></div><div class="kv">结尾淡出 1.5 秒 <div class="switch"></div></div></div>
+<div class="notice">版权：曲库只使用可商用授权音乐；用户导入的音乐会在导出时提示版权风险。</div>
+<button class="btn" data-go="subtitles">下一步：字幕</button>
+</div></section>
+
+<section class="screen" id="subtitles">
+<header><button class="back" data-back>‹</button><h1>字幕</h1><div class="grow"></div><span class="tag g">已识别 6 条</span></header>
+<div class="wrap">
+<div class="chips" style="margin-bottom:10px"><span class="chip on">AI 旁白字幕</span><span class="chip">原声字幕</span><span class="chip">双语</span></div>
+<div class="rows">
+<div class="srow"><span class="time">00:00.0–04.2</span><input value="出发，去洱海"></div>
+<div class="srow"><span class="time">00:04.2–09.6</span><input value="那天傍晚，风从海面吹过来"></div>
+<div class="srow"><span class="time">00:09.6–14.8</span><input value="我们沿着环海路一直往前开"></div>
+<div class="srow"><span class="time">00:14.8–20.5</span><input value="直到太阳把整片洱海染成金色"></div>
+<div class="srow"><span class="time">00:20.5–25.8</span><input value="有些瞬间，值得慢一点记住"></div>
+<div class="srow"><span class="time">00:25.8–30.0</span><input value="下次见"></div>
+</div>
+<div class="card"><div class="sub" style="margin-bottom:7px">字幕样式</div>
+<div class="substyle"><button class="sstyle on" style="background:#000">白字黑边</button><button class="sstyle">手写体</button><button class="sstyle" style="color:#ffd166">强调黄</button><button class="sstyle">电影衬线</button></div>
+<div class="hr"></div><div class="kv">字号<span>中</span></div><div class="kv">位置<span>底部安全区</span></div><div class="kv">自动断句<span class="tag g">开</span></div><div class="kv">关键词高亮<span class="tag g">开</span></div></div>
+<div class="notice">字幕时间轴与旁白共用同一时间基准；改完视频后字幕会保持相对位置。</div>
+<button class="btn" data-go="compose">生成成片预览</button>
+</div></section>
+
+<section class="screen" id="compose">
+<header><button class="back" data-back>‹</button><h1>成片已生成</h1><div class="grow"></div><span class="tag g">30 秒</span></header>
+<div class="wrap">
+<div class="player" id="player1"><div class="top"><span>9:16 · 1080P</span><span>Vlog · 暖色</span></div><div class="eff fx-lut"></div><button class="playbtn" data-play>▶</button><div class="cap">直到太阳把整片洱海染成金色</div><div class="row"><span class="sub" style="color:#fff" data-time>00:15 / 00:30</span><div class="grow"></div><span style="color:#fff">⛶</span></div><div class="bar" style="margin-top:7px"><i style="width:50%"></i></div></div>
+<div class="row" style="margin:12px 0 9px"><h2 style="margin:0">AI 做了什么</h2><div class="grow"></div><span class="sub">点开可撤销</span></div>
+<div class="scrollx">
+<div class="card" style="min-width:210px;padding:11px"><span class="tag">多段合成</span><div style="font-size:12.5px;font-weight:600;margin:5px 0 0">3 段素材合成 4 个镜头</div><p class="sub" style="margin:3px 0 0">按情绪曲线排序，去重后保留高光。</p></div>
+<div class="card" style="min-width:210px;padding:11px"><span class="tag g">特效</span><div style="font-size:12.5px;font-weight:600;margin:5px 0 0">叠化衔接 + 暖色 LUT</div><p class="sub" style="margin:3px 0 0">匹配模板节奏，不破坏原片肤色。</p></div>
+<div class="card" style="min-width:210px;padding:11px"><span class="tag y">声音</span><div style="font-size:12.5px;font-weight:600;margin:5px 0 0">旁白 18 秒 + 音乐闪避</div><p class="sub" style="margin:3px 0 0">有人声时配乐自动降低 8 dB。</p></div>
+</div>
+<div class="card" style="margin-top:12px"><div class="meta"><div><b>4</b>镜头</div><div><b>3</b>素材来源</div><div><b>2</b>特效</div></div></div>
+<div class="row" style="margin-top:4px"><button class="btn ghost small grow" data-go="voice">换配音</button><button class="btn small grow" data-go="timeline">进入精剪</button></div>
+<button class="btn" data-go="export">直接导出</button>
+</div></section>
+
+<section class="screen" id="timeline">
+<header><button class="back" data-back>‹</button><div><h1>精剪 · 大理旅行</h1><div class="sub">30 秒 · 5 条轨道 · 已保存</div></div><div class="grow"></div><button class="chip on" data-go="export">导出</button></header>
+<div class="wrap">
+<div class="player wide" id="player2"><div class="top"><span>00:15.200</span><span>9:16</span></div><div class="cap" style="font-size:12px;margin:0">直到太阳把整片洱海染成金色</div><button class="playbtn" style="top:50%;width:40px;height:40px;font-size:14px" data-play>▶</button></div>
+<div class="row" style="margin:9px 0 6px"><span class="sub">镜头 3 · 日落高光</span><div class="grow"></div><span class="sub">8.4 秒</span><span class="tag">1.0×</span></div>
+<div class="frame-strip"><div class="t1"></div><div class="t1"></div><div class="t1 k"></div><div class="t1 k"></div><div class="t1 k"></div><div class="t1"></div><div class="t1"></div></div>
+<div class="tl">
+<div class="ruler"><span>00:00</span><span>00:07.5</span><span>00:15</span><span>00:22.5</span><span>00:30</span></div>
+<div class="track" id="vtrack">
+<div class="clip t1" style="flex:1.4"><span>古城 4.2s</span><em class="fx" style="font-style:normal">推</em></div>
+<div class="clip t2" style="flex:2.7"><span>海边 8.0s</span><em class="fx" style="font-style:normal">慢</em></div>
+<div class="clip t3 on" style="flex:2.8"><span>日落 8.4s</span></div>
+<div class="clip t4" style="flex:1.6"><span>人像 4.8s</span></div>
+<div class="clip t1" style="flex:1.5"><span>空镜 4.6s</span></div>
+</div>
+<div class="track small"><div class="clip cap-clip" style="flex:1.4"><span>出发</span></div><div class="clip cap-clip" style="flex:2.7"><span>那天傍晚</span></div><div class="clip cap-clip" style="flex:2.8"><span>染成金色</span></div><div class="clip cap-clip" style="flex:1.6"><span>慢一点记住</span></div><div class="clip cap-clip" style="flex:1.5"><span>下次见</span></div></div>
+<div class="track mid"><div class="clip voice-clip" style="flex:9.2"><span>🎙 AI 旁白轨</span></div><div class="clip voice-clip" style="flex:2.8;opacity:.35"></div></div>
+<div class="track small"><div class="clip audio-clip" style="flex:13"><span>♫ Sunny Days · 卡点已对齐</span></div></div>
+<div class="playhead"></div>
+</div>
+<div class="row" style="justify-content:space-between;margin-top:9px"><span class="sub">已选：日落 8.4s</span><span class="sub">双指缩放 · 拖动吸附</span></div>
+<div class="tools">
+<button data-act="split">✂<b></b>分割</button><button data-act="speed">⏩<b></b>变速</button><button data-act="fx">✦<b></b>特效</button><button data-act="audio">♫<b></b>音频</button>
+</div>
+<div class="card" style="margin-top:11px"><div class="row"><span class="tag">AI 精剪建议</span><div class="grow"></div><button class="chip" data-sugg="ignore">忽略</button><button class="chip" data-sugg="apply">应用</button></div><p style="margin:7px 0 0;font-size:12.5px">第 3 镜头比小节拍点晚 0.3 秒，建议把入点提前到 <b>00:12.1</b>，可与音乐重拍对齐。</p></div>
+<div class="card"><div class="kv">当前片段时长<span id="clipdur">8.4 秒</span></div><div class="kv">原片入点 / 出点<span>00:02.3 / 00:10.7</span></div><div class="kv">倍速<span>1.0×</span></div><div class="kv">已应用特效<span>暖色 LUT</span></div></div>
+<button class="btn ghost" data-go="export">完成精剪，去导出</button>
+</div></section>
+
+<section class="screen" id="export">
+<header><button class="back" data-back>‹</button><h1>导出</h1></header>
+<div class="wrap">
+<div class="card row"><div class="thumb t3" style="width:58px;flex-shrink:0"></div><div class="grow"><h3>大理旅行 · 最终版</h3><div class="sub">00:30 · 9:16 · 4 段素材 · 5 条轨道</div><div class="row" style="margin-top:4px"><span class="tag g">无水印</span><span class="tag">音画已对齐</span></div></div></div>
+<div class="card"><div class="kv">分辨率<div class="res-opt"><span class="chip">720P</span><span class="chip on">1080P</span><span class="chip">4K</span></div></div><div class="kv">帧率<span>30 fps</span></div><div class="kv">编码<span>H.264 · 硬件加速</span></div><div class="kv">音量归一化<span class="tag g">已开启</span></div><div class="kv">同时保存工程<span class="tag g">是</span></div></div>
+<div class="card"><h3 style="margin-bottom:6px">导出将包含</h3><div class="checkline">成片视频（MP4，约 38 MB）</div><div class="checkline">工程文件，可继续修改</div><div class="checkline">单独的字幕文件（SRT）</div></div>
+<button class="btn" id="exportbtn">导出到相册</button>
+<div class="prog" id="exprog" style="margin-top:9px;display:none"><div class="bar" style="flex:1"><i id="exbar"></i></div><span id="expct">0%</span></div>
+<div id="exportdone" style="display:none"><div class="card center" style="margin-top:12px;border-color:#34d39955"><div style="font-size:30px">✓</div><h2>已保存到相册</h2><p class="sub">1080 × 1920 · 38.2 MB · 用时 24 秒</p><div class="chips" style="justify-content:center"><span class="chip">抖音</span><span class="chip">小红书</span><span class="chip">微信</span><span class="chip">更多</span></div></div></div>
+</div></section>
+
+<section class="screen" id="templates">
+<header><h1>模板中心</h1></header><div class="wrap"><div class="chips" style="margin-bottom:12px"><span class="chip on">推荐</span><span class="chip">旅行 Vlog</span><span class="chip">情绪卡点</span><span class="chip">口播</span><span class="chip">好物</span></div>
+<div class="tpl"><div class="vis t1"><div class="cap">旅行高光</div></div><div class="grow"><b style="font-size:13px">旅行高光 · 暖色</b><div class="sub" style="margin-top:3px">8 个镜头 · 30 秒 · 12.8 万人使用</div></div></div>
+<div class="tpl"><div class="vis t9"><div class="cap">情绪燃剪</div></div><div class="grow"><b style="font-size:13px">情绪燃剪 · 强节拍</b><div class="sub" style="margin-top:3px">24 个镜头 · 15 秒 · 9.1 万人使用</div></div></div>
+<div class="tpl"><div class="vis t3"><div class="cap">电影叙事</div></div><div class="grow"><b style="font-size:13px">电影叙事 · 冷调</b><div class="sub" style="margin-top:3px">6 个镜头 · 60 秒 · 5.4 万人使用</div></div></div>
+<div class="notice">模板不是固定画面，而是<b>节奏 + 转场 + 字幕样式 + 音乐类型</b>的参数组合，AI 会把你的镜头填入模板。</div>
+<button class="btn" data-go="picker">用它剪一条</button></div></section>
+
+<section class="screen" id="projects">
+<header><h1>我的项目</h1></header><div class="wrap">
+<div class="card row" data-go="timeline"><div class="thumb t3" style="width:56px;flex-shrink:0"></div><div class="grow"><h3>大理旅行 · 精修版</h3><div class="sub">30 秒 · 5 条轨道 · 编辑中</div></div><span>›</span></div>
+<div class="card row" data-go="compose"><div class="thumb t1" style="width:56px;flex-shrink:0"></div><div class="grow"><h3>海边日落</h3><div class="sub">18 秒 · 已导出 · 10 月 24 日</div></div><span>›</span></div>
+<div class="card row" data-go="script"><div class="thumb t5" style="width:56px;flex-shrink:0"></div><div class="grow"><h3>咖啡馆探店</h3><div class="sub">45 秒 · 脚本待确认</div></div><span>›</span></div>
+</div></section>
+
+<section class="screen" id="mine">
+<header><h1>我的</h1></header><div class="wrap">
+<div class="card row"><div class="avatar" style="width:46px;height:46px"></div><div><h2 style="margin:0">本地创作者</h2><div class="sub">6 段素材 · 3 个项目</div></div></div>
+<div class="card"><div class="kv" data-go="llm">大模型 API<span class="tag g">已连接 · DeepSeek</span></div><div class="kv" data-go="llm">TTS 语音接口<span class="sub">跟随大模型配置</span></div><div class="kv">端侧语音识别<span class="tag g">就绪</span></div><div class="kv">上传内容<span>字幕文本 + 缩略图</span></div><div class="kv">完整视频上传<span class="tag g">从不</span></div><div class="kv">仅 Wi-Fi 调用云端 AI<div class="switch"></div></div><div class="kv">导出默认无水印<div class="switch"></div></div></div>
+<div class="card"><h3>隐私说明</h3><p class="sub" style="margin:6px 0 0">视频解码、镜头分析、语音识别与导出均在手机本地完成；只有字幕文本、镜头标签和低分辨率缩略图会发送到你配置的大模型接口，可随时关闭或更换服务商。</p></div>
+</div></section>
+
+<section class="screen" id="llm">
+<header><button class="back" data-back>‹</button><h1>大模型 API</h1><div class="grow"></div><button class="chip on" id="llmsave">保存</button></header>
+<div class="wrap">
+<div class="notice">支持 <b>OpenAI 兼容接口</b>（/v1/chat/completions），DeepSeek、通义、Kimi、智谱、豆包、Ollama、LM Studio、自建网关都能直接填。密钥只保存在本机加密存储，不会上传到我们的服务器。</div>
+<div class="card">
+<div class="sub" style="margin-bottom:6px">服务商预设</div>
+<div class="chips" id="providers">
+<span class="chip on" data-p="deepseek">DeepSeek</span><span class="chip" data-p="qwen">通义千问</span><span class="chip" data-p="kimi">Kimi</span><span class="chip" data-p="glm">智谱 GLM</span><span class="chip" data-p="doubao">豆包</span><span class="chip" data-p="openai">OpenAI</span><span class="chip" data-p="ollama">Ollama</span><span class="chip" data-p="custom">自定义</span>
+</div>
+<div class="hr"></div>
+<div class="field"><label>接口地址（Base URL）</label><input id="baseurl" value="https://api.deepseek.com/v1" spellcheck="false"></div>
+<div class="field"><label>API Key <span class="tag g">本机加密</span></label><input id="apikey" type="password" value="sk-************************" spellcheck="false"><div class="sub hint">仅存于 Android Keystore 加密的本地存储</div></div>
+<div class="field"><label>模型名称</label><input id="model" value="deepseek-chat" spellcheck="false"></div>
+<div class="row" style="margin-top:2px"><button class="btn ghost small" id="fetchmodels">拉取可用模型</button><div class="grow"></div><button class="btn small" id="testconn">测试连接</button></div>
+<div id="testresult" class="notice" style="display:none;margin:11px 0 0"></div>
+</div>
+<div class="card"><div class="row" style="margin-bottom:2px"><h3>参数</h3><div class="grow"></div><span class="tag">JSON 输出</span></div>
+<div class="field"><label>温度 temperature</label><input id="temp" value="0.7"></div>
+<div class="field"><label>最大输出 token</label><input id="maxtok" value="4096"></div>
+<div class="field"><label>请求超时（秒）</label><input id="timeout" value="60"></div>
+<div class="kv">结构化输出（response_format）<div class="switch"></div></div>
+<div class="kv">失败自动重试<div class="switch"></div></div>
+<div class="kv">只允许 HTTPS<div class="switch"></div></div>
+</div>
+<div class="card"><div class="row" style="margin-bottom:2px"><h3>任务分工</h3><div class="grow"></div><span class="sub">可各配一个模型</span></div>
+<div class="kv"><div><b style="font-size:13px">剪辑脚本生成</b><div class="sub">理解材料、挑高光、出 EDL</div></div><span class="chip">deepseek-chat</span></div>
+<div class="kv"><div><b style="font-size:13px">解说词撰写</b><div class="sub">配合画面写旁白</div></div><span class="chip">deepseek-chat</span></div>
+<div class="kv"><div><b style="font-size:13px">字幕翻译 / 润色</b><div class="sub">可选，弱网可关</div></div><span class="chip">同主模型</span></div>
+<div class="kv"><div><b style="font-size:13px">TTS 配音</b><div class="sub">OpenAI 兼容 /audio/speech</div></div><span class="chip">未配置</span></div>
+</div>
+<div class="card"><div class="row" style="margin-bottom:7px"><h3>已保存配置</h3><div class="grow"></div><span class="tag g">1 个可用</span></div>
+<div class="scene" style="border:0;padding:4px 0"><div class="score" style="width:28px;height:28px;font-size:9px">A</div><div class="grow"><b style="font-size:12.5px">DeepSeek 官方</b><div class="mins">deepseek-chat · 延迟 680ms</div></div><span class="tag g">当前</span></div>
+<div class="scene" style="border:0;padding:4px 0"><div class="score low" style="width:28px;height:28px;font-size:9px">B</div><div class="grow"><b style="font-size:12.5px">本地 Ollama</b><div class="mins">qwen2.5:7b · 192.168.1.20:11434</div></div><span class="chip" style="padding:4px 8px;font-size:10px" id="uselocal">切换</span></div>
+<button class="btn ghost" id="addcfg" style="margin-top:7px">＋ 新增配置</button></div>
+<div class="notice"><b>降级策略</b>：接口超时或返回非法 JSON 时，自动重试一次；仍失败则改用本地规则剪法，成片流程不中断。</div>
+</div></section>
+</div>
+<nav class="nav" id="nav">
+<button data-go="home" class="on"><b>⌂</b>首页</button>
+<button data-go="templates"><b>▦</b>模板</button>
+<button data-go="projects"><b>▤</b>项目</button>
+<button data-go="mine"><b>☺</b>我的</button>
+</nav>
+<button class="notefab" id="menubtn">原型导航</button>
+<div id="menu">
+<div class="wrap"><h1>闪剪 FlashCut v0.3</h1><p class="sub">全链路智能剪辑：多段输入 → 大模型理解 → 高光提取 → 多段合成 → 特效模板 → 配音配乐 → 字幕 → 精剪</p></div>
+<div style="max-width:414px;margin:auto">
+<button class="item" data-go="home">01 · 首页 / 选择成片类型</button>
+<button class="item" data-go="picker">02 · 多段素材导入</button>
+<button class="item" data-go="analysis">03 · AI 理解素材（本地 + 云端分工）</button>
+<button class="item" data-go="brief">04 · 内容理解结果：主题 / 高光 / 语音</button>
+<button class="item" data-go="script">05 · 大模型剪辑脚本</button>
+<button class="item" data-go="onscreen">06 · 模板与自动特效</button>
+<button class="item" data-go="voice">07 · AI 解说词与配音 / 配乐</button>
+<button class="item" data-go="subtitles">08 · 字幕生成与编辑</button>
+<button class="item" data-go="compose">09 · 多段合成后的成片预览</button>
+<button class="item" data-go="timeline">10 · 多轨时间线精剪</button>
+<button class="item" data-go="export">11 · 导出（含工程与字幕）</button>
+<button class="item" data-go="templates">12 · 模板中心</button>
+<button class="item" data-go="projects">13 · 项目管理</button>
+<button class="item" data-go="mine">14 · 我的 / 隐私</button>
+<button class="item" data-go="llm">15 · 大模型 API 配置</button>
+<button class="btn ghost" id="closemenu">关闭导航</button>
+<p class="sub center">主链路：01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11</p>
+</div>
+</div>
+<script>
+(function(){
+'use strict';
+var current='home',hist=[];
+var flows=['picker','analysis','brief','script','onscreen','voice','subtitles','compose','timeline','export'];
+function go(id,push){
+ if(!document.getElementById(id))return;
+ if(push!==false&&id!==current)hist.push(current);
+ document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===id)});
+ current=id;
+ document.getElementById('menu').classList.remove('on');
+ document.querySelectorAll('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.go===id)});
+ var inner=flows.indexOf(id)>=0;
+ document.getElementById('nav').style.display=inner?'none':'flex';
+ document.getElementById('app').style.paddingBottom=inner?'24px':'86px';
+ window.scrollTo(0,0);
+}
+document.addEventListener('click',function(e){
+ var g=e.target.closest('[data-go]');
+ if(g){go(g.dataset.go);return}
+ var b=e.target.closest('[data-back]');
+ if(b){go(hist.pop()||'home',false);return}
+ var c=e.target.closest('[data-choice] .chip');
+ if(c&&!c.closest('#tplcat')){c.parentNode.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});c.classList.add('on');return}
+ var mode=e.target.closest('#modes .modecard');
+ if(mode){document.querySelectorAll('#modes .modecard').forEach(function(x){x.classList.remove('on')});mode.classList.add('on');return}
+ var cat=e.target.closest('#tplcat .chip');
+ if(cat){cat.parentNode.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});cat.classList.add('on');return}
+ var tpl=e.target.closest('.tpl');
+ if(tpl){document.querySelectorAll('.tpl').forEach(function(x){x.classList.remove('on')});tpl.classList.add('on');return}
+ var ss=e.target.closest('.sstyle');
+ if(ss){document.querySelectorAll('.sstyle').forEach(function(x){x.classList.remove('on')});ss.classList.add('on');return}
+ var sw=e.target.closest('.switch');
+ if(sw){sw.classList.toggle('off');return}
+ var prov=e.target.closest('#providers .chip');
+ if(prov){document.querySelectorAll('#providers .chip').forEach(function(x){x.classList.remove('on')});prov.classList.add('on');applyProvider(prov.dataset.p);return}
+ if(e.target.id==='testconn'){
+  var base=document.getElementById('baseurl').value.trim(),key=document.getElementById('apikey').value.trim(),mdl=document.getElementById('model').value.trim();
+  var r=document.getElementById('testresult');r.style.display='block';
+  if(!base||!key||!mdl){r.innerHTML='⚠️ 接口地址、API Key、模型名称三项都要填写';return}
+  r.innerHTML='⏳ 正在请求 '+base.replace(/^https?:\/\//,'')+' …';
+  setTimeout(function(){r.innerHTML='✅ <b>连接成功</b> · '+mdl+' · 返回 200 · 首字延迟 680ms · 结构化输出可用';},900);
+  return}
+ if(e.target.id==='fetchmodels'){
+  var r2=document.getElementById('testresult');r2.style.display='block';r2.innerHTML='⏳ 正在请求 /v1/models …';
+  setTimeout(function(){r2.innerHTML='✅ 可用模型：deepseek-chat、deepseek-reasoner、deepseek-coder';},700);return}
+ if(e.target.id==='llmsave'){toast('配置已保存到本机加密存储');return}
+ if(e.target.id==='addcfg'){toast('新增配置：填写 Base URL / Key / 模型名');return}
+ if(e.target.id==='uselocal'){toast('已切换到本地 Ollama（qwen2.5:7b）');document.getElementById('model').value='qwen2.5:7b';document.getElementById('baseurl').value='http://192.168.1.20:11434/v1';return}
+ var th=e.target.closest('#media .thumb');
+ if(th){th.classList.toggle('sel');th.querySelector('.check').textContent=th.classList.contains('sel')?'✓':'';document.getElementById('selcount').textContent='已选 '+document.querySelectorAll('#media .sel').length+' 段';return}
+ var clip=e.target.closest('#vtrack .clip');
+ if(clip){document.querySelectorAll('#vtrack .clip').forEach(function(x){x.classList.remove('on')});clip.classList.add('on');var t=clip.querySelector('span');if(t)document.getElementById('clipdur').textContent=(t.textContent.split(' ')[1]||'8.4 秒');return}
+ var pl=e.target.closest('[data-play]');
+ if(pl){pl.textContent=pl.textContent==='▶'?'❚❚':'▶';return}
+ var act=e.target.closest('[data-act]');
+ if(act){var m={split:'已在播放头处分割片段',speed:'打开变速面板',fx:'打开特效面板',audio:'打开音频面板'};toast(m[act.dataset.act]||'已执行');return}
+ var sg=e.target.closest('[data-sugg]');
+ if(sg){sg.closest('.card').style.opacity='.45';toast(sg.dataset.sugg==='apply'?'已把入点对齐到 00:12.1':'已忽略该建议');return}
+ if(e.target.id==='regen'){toast('已按原指令重新生成脚本（复用识别结果）');return}
+});
+var PRESETS={
+ deepseek:{url:'https://api.deepseek.com/v1',model:'deepseek-chat'},
+ qwen:{url:'https://dashscope.aliyuncs.com/compatible-mode/v1',model:'qwen-plus'},
+ kimi:{url:'https://api.moonshot.cn/v1',model:'moonshot-v1-32k'},
+ glm:{url:'https://open.bigmodel.cn/api/paas/v4',model:'glm-4-plus'},
+ doubao:{url:'https://ark.cn-beijing.volces.com/api/v3',model:'doubao-pro-32k'},
+ openai:{url:'https://api.openai.com/v1',model:'gpt-4o-mini'},
+ ollama:{url:'http://192.168.1.20:11434/v1',model:'qwen2.5:7b'},
+ custom:{url:'',model:''}
+};
+function applyProvider(p){
+ var x=PRESETS[p];if(!x)return;
+ document.getElementById('baseurl').value=x.url;
+ document.getElementById('model').value=x.model;
+ var r=document.getElementById('testresult');r.style.display='none';
+ if(p==='custom')toast('自定义接口：填写任意 OpenAI 兼容 Base URL');
+}
+function toast(t){
+ var d=document.createElement('div');
+ d.textContent=t;
+ d.style.cssText='position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#22263a;border:1px solid #3b4058;color:#e8eaf5;font-size:12px;padding:9px 14px;border-radius:10px;z-index:30;box-shadow:0 8px 20px #0008;max-width:86%;text-align:center';
+ document.body.appendChild(d);
+ setTimeout(function(){d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(function(){d.remove()},320)},1600);
+}
+document.getElementById('menubtn').onclick=function(){document.getElementById('menu').classList.add('on')};
+document.getElementById('closemenu').onclick=function(){document.getElementById('menu').classList.remove('on')};
+document.querySelectorAll('#nav button').forEach(function(b){b.onclick=function(){go(b.dataset.go)}});
+document.getElementById('exportbtn').onclick=function(){
+ var b=this,p=document.getElementById('exprog'),bar=document.getElementById('exbar'),pct=document.getElementById('expct'),n=0;
+ b.disabled=true;b.textContent='本地导出中…';p.style.display='flex';
+ var t=setInterval(function(){
+  n+=5;if(n>100)n=100;bar.style.width=n+'%';pct.textContent=n+'%';
+  if(n===100){clearInterval(t);b.textContent='重新导出';b.disabled=false;
+   document.getElementById('exportdone').style.display='block';
+   toast('导出完成，已保存到相册');}
+ },70);
+};
+// 分析页自动推进
+var analysisTimer=null;
+var obs=new MutationObserver(function(){
+ if(document.getElementById('analysis').classList.contains('on')){
+  if(analysisTimer)return;
+  var n=70;
+  analysisTimer=setInterval(function(){
+   n+=2;
+   if(n>=100){n=100;clearInterval(analysisTimer);analysisTimer=null;}
+   document.getElementById('abar').style.width=n+'%';
+   document.getElementById('apct').textContent=n<100?'约 '+n+'%':'可查看结果';
+  },120);
+ }
+});
+obs.observe(document.getElementById('app'),{attributes:true,subtree:true,attributeFilter:['class']});
+go('home',false);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#0C0D12</color>
+    <color name="panel">#15171F</color>
+    <color name="line">#292C3A</color>
+    <color name="text">#F2F3F8</color>
+    <color name="sub">#888EA3</color>
+    <color name="brand">#7B5CFF</color>
+    <color name="brand2">#FF5C8A</color>
+    <color name="green">#34D399</color>
+    <color name="yellow">#FBBF24</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

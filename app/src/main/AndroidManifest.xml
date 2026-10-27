@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_VIDEO"
+        android:minSdkVersion="33" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <application
+        android:name=".FlashCutApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.FlashCut"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".ui.HomeActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".ui.PickerActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.AnalysisActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.BriefActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.ScriptActivity" android:exported="false" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.OnscreenActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.VoiceActivity" android:exported="false" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.SubtitlesActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.ComposeActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.TemplatesActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.ProjectsActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".dev.AuditActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".dev.DebugActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.MineActivity" android:exported="false" android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.editor.EditorActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.llm.LlmConfigActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.export.ExportActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+</manifest>

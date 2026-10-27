@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d0e13">
+<title>闪剪 FlashCut · 智能剪辑 App 原型</title>
+<style>
+:root{--bg:#0d0e13;--panel:#161821;--panel2:#1d2030;--line:#2a2d3d;--text:#f4f5fa;--sub:#8b90a6;--brand:#7c5cff;--brand2:#ff5c8a;--green:#35d6a4;--yellow:#ffc24b;--r:18px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060a;color:var(--text);font:15px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;display:flex;justify-content:center;min-height:100vh}
+#app{width:100%;max-width:414px;min-height:100vh;background:var(--bg);position:relative;overflow:hidden;padding-bottom:86px}
+@media(min-width:500px){body{padding:28px 0}#app{border:1px solid #2a2d3d;border-radius:36px;min-height:820px;box-shadow:0 30px 80px #0009}}
+header{padding:18px 18px 6px;display:flex;align-items:center;gap:10px}
+h1{font-size:21px;margin:0;letter-spacing:.3px}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0}
+.logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;font-weight:800;font-size:17px;box-shadow:0 6px 18px #7c5cff55}
+.sub{color:var(--sub);font-size:12px}.grow{flex:1}.row{display:flex;align-items:center;gap:10px}.wrap{padding:14px 18px}.center{text-align:center}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.hero{background:linear-gradient(135deg,#241b4d,#3a1c3a 60%,#182035);border:1px solid #4a3a7a;border-radius:22px;padding:18px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:170px;height:170px;right:-60px;top:-70px;border-radius:50%;background:radial-gradient(circle,#7c5cff66,transparent 70%)}
+.hero h2{font-size:20px;margin-bottom:6px}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;font-weight:600;background:linear-gradient(90deg,var(--brand),#a15cff);box-shadow:0 8px 22px #7c5cff33;margin-top:12px}
+.btn.secondary{background:var(--panel2);box-shadow:none;border:1px solid var(--line);color:var(--sub)}
+.btn.small{width:auto;padding:9px 16px;font-size:13px;margin:0;border-radius:11px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 13px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:13px;color:var(--sub)}
+.chip.on{background:#7c5cff22;border-color:var(--brand);color:#cdbcff}
+.chip.on.green{background:#35d6a41c;border-color:var(--green);color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thumb{aspect-ratio:3/4;border-radius:12px;position:relative;overflow:hidden;border:2px solid transparent;background:#222}
+.thumb.sel{border-color:var(--brand)}
+.thumb .badge{position:absolute;left:6px;bottom:5px;font-size:10px;background:#0008;padding:1px 5px;border-radius:5px}
+.thumb .check{position:absolute;right:5px;top:5px;width:19px;height:19px;border-radius:50%;background:#0006;border:1.5px solid #fff9;display:grid;place-items:center;font-size:11px}
+.thumb.sel .check{background:var(--brand);border-color:var(--brand)}
+.t1{background:linear-gradient(160deg,#f7b267,#f4845f 45%,#5d3a6e)}.t2{background:linear-gradient(200deg,#43cea2,#185a9d)}.t3{background:linear-gradient(160deg,#30cfd0,#330867)}.t4{background:linear-gradient(200deg,#ff9a9e,#a18cd1)}.t5{background:linear-gradient(160deg,#fbc2eb,#8f6fd0)}.t6{background:linear-gradient(200deg,#84fab0,#4a6fa5)}
+.scrollx{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.scrollx::-webkit-scrollbar{display:none}
+.scrollx .card{min-width:132px;margin:0;padding:0;overflow:hidden}
+.scrollx .art{height:74px}.scrollx .info{padding:9px 11px}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:414px;background:#12141de8;backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;padding:9px 0 14px;z-index:5}
+.nav button{flex:1;color:var(--sub);font-size:11px;display:grid;gap:3px;place-items:center}.nav button b{font-size:19px;font-weight:400}.nav button.on{color:#cdbcff}
+.screen{display:none;animation:fade .25s}.screen.on{display:block}@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tag{font-size:10px;padding:2px 7px;border-radius:6px;background:#7c5cff22;color:#cdbcff;white-space:nowrap}
+.tag.g{background:#35d6a41c;color:var(--green)}.tag.y{background:#ffc24b1c;color:var(--yellow)}
+.bar{height:7px;border-radius:6px;background:var(--panel2);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:6px;transition:width .4s}
+.step{display:flex;gap:11px;padding:11px 0;align-items:flex-start}
+.dot{width:22px;height:22px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;flex-shrink:0;margin-top:2px;color:var(--sub)}
+.step.done .dot{background:#35d6a41c;color:var(--green);border-color:#35d6a455}.step.now .dot{background:#7c5cff33;color:#cdbcff;border-color:var(--brand)}
+.step .txt{flex:1}.step small{color:var(--sub);font-size:12px}
+.player{aspect-ratio:9/13;border-radius:20px;background:linear-gradient(170deg,#2b3a67,#7a4a6e 55%,#d99a6c);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:16px}
+.player .cap{background:#0009;padding:5px 9px;border-radius:8px;font-size:15px;font-weight:600;text-align:center;margin-bottom:12px}
+.player .top{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;font-size:11px}
+.playbtn{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:#ffffff26;border:1px solid #fff5;display:grid;place-items:center;font-size:20px;backdrop-filter:blur(6px)}
+.track{display:flex;gap:4px;height:44px;margin-bottom:6px}.track .clip{border-radius:7px;flex:1;position:relative;overflow:hidden;min-width:0}
+.clip.s1{background:linear-gradient(135deg,#f7b267,#f4845f)}.clip.s2{background:linear-gradient(135deg,#43cea2,#185a9d)}.clip.s3{background:linear-gradient(135deg,#30cfd0,#330867)}.clip.s4{background:linear-gradient(135deg,#ff9a9e,#a18cd1)}
+.clip span{position:absolute;bottom:3px;left:5px;font-size:9px;color:#fffc}
+.track.caps{height:20px}.track.caps .clip{background:#3d3364}.track.caps .clip span{font-size:9px;bottom:2px}
+.track.music{height:26px}.track.music .clip{background:repeating-linear-gradient(90deg,#2b7a63 0 3px,#1c4a3e 3px 6px);border-radius:6px}
+.ruler{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin:4px 0 8px}
+.tools{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center;font-size:11px;color:var(--sub)}
+.tools button{padding:10px 2px;background:var(--panel);border:1px solid var(--line);border-radius:12px}.tools b{display:block;font-size:18px;color:var(--text);font-weight:400;margin-bottom:3px}
+.sugg{border-left:3px solid var(--brand)}
+.kv{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}.kv:last-child{border:0}.kv span{color:var(--sub)}
+.switch{width:42px;height:24px;border-radius:20px;background:var(--brand);position:relative;flex-shrink:0}.switch:after{content:"";position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;right:3px;top:3px}
+.switch.off{background:var(--panel2)}.switch.off:after{left:3px;right:auto}
+.notefab{position:fixed;right:14px;bottom:96px;z-index:9;background:var(--panel2);border:1px solid var(--line);border-radius:22px;padding:9px 14px;font-size:12px;color:#cdbcff;box-shadow:0 8px 20px #0007}
+#menu{position:fixed;inset:0;background:#05060aeF;z-index:20;display:none;padding:26px 20px;overflow:auto}#menu.on{display:block}
+#menu button.item{display:block;width:100%;max-width:414px;margin:0 auto 9px;text-align:left;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.notice{font-size:12px;color:var(--sub);background:#7c5cff12;border:1px dashed #7c5cff55;padding:10px 12px;border-radius:12px;margin-bottom:14px}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#35d6a4,#185a9d)}
+</style>
+</head>
+<body>
+<div id="app">
+<section class="screen on" id="home">
+<header><div class="logo">闪</div><div><h1>闪剪 FlashCut</h1><div class="sub">让素材自己变成好片子</div></div><div class="grow"></div><div class="avatar"></div></header>
+<div class="wrap">
+<div class="hero"><span class="tag">AI 一键成片</span><h2>一句话，剪好一条视频</h2><p class="sub" style="max-width:250px">选几段素材，剩下的交给 AI：挑高光、去停顿、卡节拍、写字幕。</p><button class="btn" data-go="picker" style="max-width:200px">✦ 开始智能成片</button></div>
+<div class="row" style="margin:20px 0 12px"><h2 style="margin:0">快捷工具</h2></div>
+<div class="grid" style="grid-template-columns:repeat(4,1fr);text-align:center;font-size:11px">
+<button data-go="editor"><div class="card" style="padding:13px 0;margin-bottom:6px">✂</div>自由剪辑</button>
+<button data-go="setup"><div class="card" style="padding:13px 0;margin-bottom:6px">▤</div>智能字幕</button>
+<button data-go="setup"><div class="card" style="padding:13px 0;margin-bottom:6px">♫</div>自动卡点</button>
+<button data-go="setup"><div class="card" style="padding:13px 0;margin-bottom:6px">↻</div>长视频切片</button>
+</div>
+<div class="row" style="margin:22px 0 12px"><h2 style="margin:0">灵感模板</h2><div class="grow"></div><button class="sub" data-go="templates">全部 ›</button></div>
+<div class="scrollx">
+<div class="card" data-go="templates"><div class="art t1"></div><div class="info"><h3>旅行高光</h3><div class="sub">30s · 12.8 万人用</div></div></div>
+<div class="card" data-go="templates"><div class="art t2"></div><div class="info"><h3>周末 Vlog</h3><div class="sub">45s · 氛围感</div></div></div>
+<div class="card" data-go="templates"><div class="art t4"></div><div class="info"><h3>好物分享</h3><div class="sub">15s · 带货节奏</div></div></div>
+</div>
+<div class="row" style="margin:22px 0 12px"><h2 style="margin:0">继续编辑</h2></div>
+<div class="card row" data-go="editor"><div class="thumb t3" style="width:52px;flex-shrink:0"></div><div class="grow"><h3>大理旅行 · 第 2 版</h3><div class="sub">32 秒 · 昨天 22:14</div></div><span class="tag g">已自动保存</span></div>
+</div></section>
+
+<section class="screen" id="picker">
+<header><button data-back>‹</button><h1>选择素材</h1><div class="grow"></div><span class="sub" id="selcount">已选 4 段</span></header>
+<div class="wrap">
+<div class="notice">AI 建议选 5–15 段素材；支持视频与 Live Photo。原片只在本地处理，分析阶段不上传完整视频。</div>
+<div class="chips" style="margin-bottom:14px"><span class="chip on">最近项目</span><span class="chip">旅行</span><span class="chip">收藏</span><span class="chip">全部视频</span></div>
+<div class="grid" id="media">
+<div class="thumb t1 sel"><i class="check">✓</i><span class="badge">00:08</span></div>
+<div class="thumb t2 sel"><i class="check">✓</i><span class="badge">00:12</span></div>
+<div class="thumb t3 sel"><i class="check">✓</i><span class="badge">00:06</span></div>
+<div class="thumb t4 sel"><i class="check">✓</i><span class="badge">00:15</span></div>
+<div class="thumb t5"><i class="check"></i><span class="badge">00:21</span></div>
+<div class="thumb t6"><i class="check"></i><span class="badge">00:09</span></div>
+<div class="thumb t2"><i class="check"></i><span class="badge">00:18</span></div>
+<div class="thumb t1"><i class="check"></i><span class="badge">00:11</span></div>
+<div class="thumb t4"><i class="check"></i><span class="badge">00:07</span></div>
+</div>
+<p class="sub center" style="margin:14px 0">当前素材共 41 秒 · 自动识别 6 个镜头</p>
+<button class="btn" data-go="setup">下一步：告诉 AI 怎么剪</button>
+</div></section>
+
+<section class="screen" id="setup">
+<header><button data-back>‹</button><h1>智能成片设置</h1></header>
+<div class="wrap">
+<div class="hero"><div class="sub">想用素材做什么？</div><div style="margin-top:10px;font-size:16px;line-height:1.7">“剪一条 <b>30 秒旅行 Vlog</b>，节奏轻快，保留海边日落的镜头，自动加字幕。”</div><div class="sub" style="margin-top:10px">🎙 点击可重新输入或语音描述</div></div>
+<h2 style="margin-top:20px">成片风格</h2><div class="chips" data-choice><span class="chip on">旅行 Vlog</span><span class="chip">高能卡点</span><span class="chip">电影叙事</span><span class="chip">好物分享</span></div>
+<h2 style="margin-top:20px">画幅与时长</h2><div class="chips" data-choice><span class="chip on">9:16 竖屏</span><span class="chip">16:9 横屏</span><span class="chip">1:1 方形</span></div>
+<div class="chips" data-choice style="margin-top:9px"><span class="chip">15 秒</span><span class="chip on">30 秒</span><span class="chip">60 秒</span><span class="chip">不限</span></div>
+<div class="card" style="margin-top:20px"><div class="kv">自动生成字幕 <div class="switch"></div></div><div class="kv">删除静音与口头停顿 <div class="switch"></div></div><div class="kv">按音乐节拍切换镜头 <div class="switch"></div></div><div class="kv">保留环境原声 <div class="switch off"></div></div></div>
+<button class="btn" id="generate">✦ 生成第一版 · 预计 45 秒</button><p class="sub center">生成后可逐段修改，不会覆盖原始素材</p>
+</div></section>
+
+<section class="screen" id="processing">
+<header><h1>AI 正在理解素材</h1></header>
+<div class="wrap">
+<div class="center" style="padding:24px 0"><div class="logo" style="width:74px;height:74px;border-radius:24px;margin:0 auto 18px;font-size:30px">✦</div><h2 id="pct">分析中 68%</h2><p class="sub">正在把“好看”拆成可以修改的剪辑决定</p></div>
+<div class="bar" style="margin-bottom:22px"><i id="progress" style="width:68%"></i></div>
+<div class="card">
+<div class="step done"><div class="dot">✓</div><div class="txt"><h3>镜头切分与画质检测</h3><small>识别 6 个镜头，剔除 2 段抖动画面</small></div></div>
+<div class="step done"><div class="dot">✓</div><div class="txt"><h3>语音识别与语义分段</h3><small>端侧识别完成，发现 3 处口误与停顿</small></div></div>
+<div class="step now"><div class="dot">3</div><div class="txt"><h3>高光选择与脚本生成</h3><small>综合人物、构图、语音与运动强度排序</small></div></div>
+<div class="step"><div class="dot">4</div><div class="txt"><h3>节拍匹配与字幕排版</h3><small>等待上一步完成</small></div></div>
+</div>
+<div class="notice">关键设计：AI 输出的是可编辑时间线，而不是一段无法修改的“黑盒视频”。</div>
+<button class="btn secondary" data-go="home">转到后台，完成后通知我</button>
+</div></section>
+
+<section class="screen" id="result">
+<header><button data-back>‹</button><h1>第一版已生成</h1><div class="grow"></div><span class="tag g">节省约 18 分钟</span></header>
+<div class="wrap">
+<div class="player"><div class="top"><span>9:16 · 00:32</span><span>1080P</span></div><button class="playbtn" id="play">▶</button><div class="cap">落日把洱海染成了金色</div><div class="row"><span class="sub" style="color:#fff">00:08 / 00:32</span><div class="grow"></div><span>⛶</span></div><div class="bar" style="margin-top:8px"><i style="width:25%"></i></div></div>
+<div class="row" style="margin:14px 0 10px"><h2 style="margin:0">AI 这样剪的理由</h2><div class="grow"></div><span class="sub">可逐项撤销</span></div>
+<div class="scrollx">
+<div class="card sugg" style="min-width:220px;padding:12px"><span class="tag">选片</span><h3 style="margin:7px 0">保留日落高光 4.2 秒</h3><p class="sub" style="margin:0">人物清晰、画面稳定，放在 00:12 情绪转折点。</p></div>
+<div class="card sugg" style="min-width:220px;padding:12px"><span class="tag g">节奏</span><h3 style="margin:7px 0">删除 3 处无效停顿</h3><p class="sub" style="margin:0">共减少 5.8 秒，不改变原句语义。</p></div>
+<div class="card sugg" style="min-width:220px;padding:12px"><span class="tag y">声音</span><h3 style="margin:7px 0">BGM 自动闪避</h3><p class="sub" style="margin:0">有人声时降低配乐 8 dB，保留现场感。</p></div>
+</div>
+<div class="row" style="margin-top:14px"><button class="btn secondary small grow" data-go="setup">换一版</button><button class="btn small grow" data-go="editor">进入精修</button></div>
+<button class="btn" data-go="export">满意，去导出</button>
+</div></section>
+
+<section class="screen" id="editor">
+<header><button data-back>‹</button><div><h1>大理旅行</h1><div class="sub">已自动保存 · 32 秒</div></div><div class="grow"></div><button class="chip on" data-go="export">导出</button></header>
+<div class="wrap">
+<div class="player" style="aspect-ratio:16/10;border-radius:14px"><div class="cap" style="font-size:13px;margin-bottom:0">落日把洱海染成了金色</div><button class="playbtn">▶</button></div>
+<div class="card sugg" style="margin-top:12px;padding:11px"><div class="row"><span class="tag">AI 建议</span><div class="grow"></div><button class="sub">忽略</button><button class="tag g">应用</button></div><p style="margin:8px 0 0;font-size:13px">第 3 镜头比节拍晚 0.3 秒，建议对齐到 00:12.4。</p></div>
+<div class="ruler"><span>00:00</span><span>00:08</span><span>00:16</span><span>00:24</span><span>00:32</span></div>
+<div class="track"><div class="clip s1"><span>海边 4.2s</span></div><div class="clip s2"><span>古城 6.1s</span></div><div class="clip s3" style="flex:1.4"><span>日落 8.4s</span></div><div class="clip s4"><span>人像 5.0s</span></div></div>
+<div class="track caps"><div class="clip"><span>出发吧</span></div><div class="clip"><span>落日把洱海…</span></div><div class="clip"><span>下次见</span></div></div>
+<div class="track music"><div class="clip"><span>♫ Sunny Days · 自动闪避</span></div></div>
+<div class="row sub" style="font-size:11px;margin:7px 0 16px"><span>视频轨</span><span>字幕轨</span><span>音乐轨</span><div class="grow"></div><span>双指缩放时间线</span></div>
+<div class="tools"><button>✂<b></b>分割</button><button>◫<b></b>替换</button><button>▤<b></b>字幕</button><button>♫<b></b>音乐</button><button>✦<b></b>AI 优化</button></div>
+</div></section>
+
+<section class="screen" id="export">
+<header><button data-back>‹</button><h1>导出与分享</h1></header>
+<div class="wrap">
+<div class="card row"><div class="thumb t1" style="width:64px;flex-shrink:0"></div><div><h3>大理旅行 · 最终版</h3><div class="sub">00:32 · 9:16 · 预计 38 MB</div><span class="tag g">无水印</span></div></div>
+<div class="card"><div class="kv">分辨率 <div class="chips"><span class="chip">720P</span><span class="chip on">1080P</span></div></div><div class="kv">帧率 <span>30 fps</span></div><div class="kv">编码 <span>H.264 · 硬件加速</span></div><div class="kv">同时保存工程 <div class="switch"></div></div></div>
+<div class="notice">导出在本地完成；保存工程后，可继续修改字幕、片段与配乐，不必重新生成。</div>
+<button class="btn" id="exportbtn">导出到相册</button>
+<div id="exportdone" style="display:none"><div class="card center" style="margin-top:14px;border-color:#35d6a455"><div style="font-size:34px">✓</div><h2>已保存到相册</h2><p class="sub">1080 × 1920 · 38.2 MB · 耗时 21 秒</p><div class="chips" style="justify-content:center"><span class="chip">抖音</span><span class="chip">小红书</span><span class="chip">微信</span><span class="chip">更多分享</span></div></div></div>
+</div></section>
+
+<section class="screen" id="templates">
+<header><h1>模板中心</h1></header><div class="wrap"><div class="chips" style="margin-bottom:14px"><span class="chip on">推荐</span><span class="chip">旅行</span><span class="chip">美食</span><span class="chip">带货</span><span class="chip">宠物</span></div><div class="grid" style="grid-template-columns:1fr 1fr">
+<div class="card" style="padding:0;overflow:hidden"><div class="t1" style="height:160px"></div><div style="padding:11px"><h3>旅行高光</h3><div class="sub">8 个镜头 · 30 秒</div></div></div>
+<div class="card" style="padding:0;overflow:hidden"><div class="t2" style="height:160px"></div><div style="padding:11px"><h3>周末 Vlog</h3><div class="sub">12 个镜头 · 45 秒</div></div></div>
+<div class="card" style="padding:0;overflow:hidden"><div class="t4" style="height:160px"></div><div style="padding:11px"><h3>好物分享</h3><div class="sub">6 个镜头 · 15 秒</div></div></div>
+<div class="card" style="padding:0;overflow:hidden"><div class="t3" style="height:160px"></div><div style="padding:11px"><h3>电影感日常</h3><div class="sub">10 个镜头 · 60 秒</div></div></div>
+</div><div class="notice">MVP 仅做 3 套可参数化模板；模板社区不进入第一阶段。</div></div></section>
+
+<section class="screen" id="projects"><header><h1>我的项目</h1></header><div class="wrap">
+<div class="card row" data-go="editor"><div class="thumb t3" style="width:60px;flex-shrink:0"></div><div class="grow"><h3>大理旅行 · 第 2 版</h3><div class="sub">32 秒 · 编辑中 · 昨天 22:14</div></div><span>›</span></div>
+<div class="card row" data-go="result"><div class="thumb t1" style="width:60px;flex-shrink:0"></div><div class="grow"><h3>海边日落</h3><div class="sub">18 秒 · 已导出 · 10 月 24 日</div></div><span>›</span></div>
+<div class="card row"><div class="thumb t5" style="width:60px;flex-shrink:0"></div><div class="grow"><h3>咖啡馆探店</h3><div class="sub">45 秒 · 草稿 · 10 月 21 日</div></div><span>›</span></div>
+</div></section>
+
+<section class="screen" id="mine"><header><h1>我的</h1></header><div class="wrap"><div class="card row"><div class="avatar" style="width:52px;height:52px"></div><div><h2 style="margin:0">本地创作者</h2><div class="sub">素材与工程默认仅保存在本机</div></div></div>
+<div class="card"><div class="kv">端侧语音识别 <span class="tag g">已就绪</span></div><div class="kv">云端大模型决策 <div class="switch"></div></div><div class="kv">仅 Wi-Fi 上传分析数据 <div class="switch"></div></div><div class="kv">导出默认无水印 <div class="switch"></div></div></div>
+<div class="card"><h3>隐私说明</h3><p class="sub">完整视频默认不上传；云端 AI 仅接收字幕文本、镜头特征与低分辨率缩略图，且可单独关闭。</p></div>
+</div></section>
+</div>
+<nav class="nav" id="nav">
+<button data-go="home" class="on"><b>⌂</b>首页</button>
+<button data-go="templates"><b>▦</b>模板</button>
+<button data-go="projects"><b>▤</b>项目</button>
+<button data-go="mine"><b>☺</b>我的</button>
+</nav>
+<button class="notefab" id="menubtn">原型导航</button>
+<div id="menu">
+<div class="wrap"><h1>原型导航</h1><p class="sub">闪剪 FlashCut · v0.1 可交互流程原型（非最终视觉稿）</p></div>
+<div style="max-width:414px;margin:auto">
+<button class="item" data-go="home">01 · 首页 / 功能入口</button>
+<button class="item" data-go="picker">02 · 选择素材</button>
+<button class="item" data-go="setup">03 · 一句话与剪辑偏好</button>
+<button class="item" data-go="processing">04 · AI 分析进度</button>
+<button class="item" data-go="result">05 · 第一版成片与可解释建议</button>
+<button class="item" data-go="editor">06 · 多轨时间线精修</button>
+<button class="item" data-go="export">07 · 导出与分享</button>
+<button class="item" data-go="templates">08 · 模板中心</button>
+<button class="item" data-go="projects">09 · 项目管理</button>
+<button class="item" data-go="mine">10 · 我的 / 隐私设置</button>
+<button class="btn secondary" id="closemenu">关闭导航</button>
+<p class="sub center">核心体验闭环：01 → 02 → 03 → 04 → 05 → 06 → 07</p>
+</div>
+</div>
+<script>
+(function(){
+'use strict';
+var current='home',history=[];
+var titles={home:'首页',templates:'模板中心',projects:'我的项目',mine:'我的'};
+function go(id,push){
+ var target=document.getElementById(id);if(!target)return;
+ if(push!==false&&id!==current)history.push(current);
+ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on')});
+ target.classList.add('on');current=id;
+ document.getElementById('menu').classList.remove('on');
+ document.querySelectorAll('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.go===id)});
+ document.getElementById('nav').style.display=['picker','setup','processing','result','editor','export'].indexOf(id)>=0?'none':'flex';
+ document.getElementById('app').style.paddingBottom=['picker','setup','processing','result','editor','export'].indexOf(id)>=0?'24px':'86px';
+ window.scrollTo(0,0);
+}
+document.addEventListener('click',function(e){
+ var g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return}
+ if(e.target.closest('[data-back]')){go(history.pop()||'home',false);return}
+ var choice=e.target.closest('[data-choice] .chip');
+ if(choice){choice.parentNode.querySelectorAll('.chip').forEach(function(c){c.classList.remove('on')});choice.classList.add('on');return}
+ var sw=e.target.closest('.switch');if(sw){sw.classList.toggle('off');return}
+ var thumb=e.target.closest('#media .thumb');
+ if(thumb){thumb.classList.toggle('sel');thumb.querySelector('.check').textContent=thumb.classList.contains('sel')?'✓':'';document.getElementById('selcount').textContent='已选 '+document.querySelectorAll('#media .sel').length+' 段';return}
+});
+document.getElementById('menubtn').onclick=function(){document.getElementById('menu').classList.add('on')};
+document.getElementById('closemenu').onclick=function(){document.getElementById('menu').classList.remove('on')};
+document.getElementById('generate').onclick=function(){
+ go('processing');var n=0,p=document.getElementById('progress'),t=document.getElementById('pct');p.style.width='0%';
+ var timer=setInterval(function(){n+=4;if(n>100)n=100;p.style.width=n+'%';t.textContent=n<100?'分析中 '+n+'%':'时间线生成完成';
+ if(n===100){clearInterval(timer);setTimeout(function(){go('result')},550)}},80);
+};
+document.getElementById('play').onclick=function(){this.textContent=this.textContent==='▶'?'❚❚':'▶'};
+document.getElementById('exportbtn').onclick=function(){
+ var b=this;b.textContent='本地导出中… 68%';b.disabled=true;
+ setTimeout(function(){b.textContent='重新导出';b.disabled=false;document.getElementById('exportdone').style.display='block';document.getElementById('exportdone').scrollIntoView({behavior:'smooth',block:'nearest'})},1100);
+};
+document.querySelectorAll('#nav button').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.go)})});
+})();
+</script>
+</body>
+</html>
